@@ -125,7 +125,11 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (containsBlockedLanguage(formData.name) || containsBlockedLanguage(formData.description)) {
+    if (
+      containsBlockedLanguage(formData.name) ||
+      containsBlockedLanguage(formData.description) ||
+      containsBlockedLanguage(formData.address)
+    ) {
       alert(MODERATION_MESSAGE);
       return;
     }
