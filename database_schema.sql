@@ -1,6 +1,7 @@
 -- 0. Limpiar tablas y funciones existentes para evitar errores si ya se ejecutó antes
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP FUNCTION IF EXISTS public.delete_business_if_allowed(uuid);
 DROP TABLE IF EXISTS public.favorites CASCADE;
 DROP TABLE IF EXISTS public.business_reports CASCADE;
 DROP TABLE IF EXISTS public.products CASCADE;
@@ -225,6 +226,38 @@ USING (
   bucket_id = 'public-images'
   AND auth.role() = 'authenticated'
 );
+
+-- 8b. RPC: borrar negocio (admin o dueño); evita fallos de RLS en CASCADE
+CREATE OR REPLACE FUNCTION public.delete_business_if_allowed(target_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  uid uuid := auth.uid();
+BEGIN
+  IF uid IS NULL THEN
+    RAISE EXCEPTION 'Debes iniciar sesión.';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.users WHERE id = uid AND role = 'admin') THEN
+    DELETE FROM public.businesses WHERE id = target_id;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Negocio no encontrado.';
+    END IF;
+    RETURN;
+  END IF;
+
+  DELETE FROM public.businesses WHERE id = target_id AND owner_id = uid;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'No tienes permiso para eliminar este negocio.';
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.delete_business_if_allowed(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.delete_business_if_allowed(uuid) TO authenticated;
 
 -- 9. Trigger para crear perfil automáticamente al registrarse en Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()

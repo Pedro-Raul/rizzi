@@ -50,6 +50,25 @@ export const businessService = {
   },
 
   async deleteBusiness(businessId) {
+    const { error: rpcError } = await supabase.rpc('delete_business_if_allowed', {
+      target_id: businessId
+    });
+
+    if (!rpcError) {
+      return { error: null, deleted: 1 };
+    }
+
+    const missingRpc =
+      rpcError.code === 'PGRST202' ||
+      rpcError.code === '42883' ||
+      /delete_business_if_allowed|function.*does not exist|Could not find the function/i.test(
+        rpcError.message || ''
+      );
+
+    if (!missingRpc) {
+      return { error: rpcError, deleted: 0 };
+    }
+
     const { data, error } = await supabase
       .from('businesses')
       .delete()
@@ -64,7 +83,7 @@ export const businessService = {
       return {
         error: {
           message:
-            'No se eliminó ningún negocio. Si eres admin, ejecuta en Supabase el script admin_cascade_delete.sql (políticas RLS en favoritos y reportes) y comprueba que tu usuario tiene role = admin en public.users.'
+            'No se eliminó el negocio. En Supabase ejecuta rpc_delete_business.sql (recomendado) o admin_cascade_delete.sql + admin_policies.sql, y verifica role = admin en public.users.'
         },
         deleted: 0
       };
