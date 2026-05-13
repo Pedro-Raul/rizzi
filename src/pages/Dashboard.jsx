@@ -3,10 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import { businessService } from '../services/business.service';
 import { storageService } from '../services/storage.service';
+import { reportService } from '../services/report.service';
 import { useNavigate } from 'react-router-dom';
-import { Store, Plus, X, Image as ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import { Store, Plus, X, Image as ImageIcon, Pencil, Trash2, Flag } from 'lucide-react';
 import BusinessCard from '../components/business/BusinessCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import AdminReportsPanel from '../components/admin/AdminReportsPanel';
+import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 
 const emptyBusinessForm = {
   name: '',
@@ -37,6 +40,7 @@ const Dashboard = () => {
   const [saving, setSaving] = useState(false);
   const [businessToDelete, setBusinessToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [reports, setReports] = useState([]);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -49,6 +53,14 @@ const Dashboard = () => {
 
     if (bizRes.data) setBusinesses(bizRes.data);
     if (catRes.data) setCategories(catRes.data);
+
+    if (isAdmin) {
+      const { data: reportData } = await reportService.listReportsForAdmin();
+      setReports(reportData || []);
+    } else {
+      setReports([]);
+    }
+
     setLoading(false);
   }, [user, isAdmin]);
 
@@ -112,6 +124,12 @@ const Dashboard = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (containsBlockedLanguage(formData.name) || containsBlockedLanguage(formData.description)) {
+      alert(MODERATION_MESSAGE);
+      return;
+    }
+
     setSaving(true);
 
     let logo_url = editingBusiness?.logo_url || null;
@@ -215,6 +233,25 @@ const Dashboard = () => {
             Cerrar sesión
           </button>
         </div>
+
+        {isAdmin && (
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+            <h2 className="text-2xl font-bold text-dark flex items-center gap-2 mb-2">
+              <Flag className="text-primary" />
+              Reportes de negocios
+            </h2>
+            <p className="text-gray-600 text-sm mb-6">
+              Revisa los reportes enviados por la comunidad. Puedes marcarlos como revisados o descartados y dejar notas internas.
+            </p>
+            {loading ? (
+              <div className="flex justify-center py-10">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : (
+              <AdminReportsPanel reports={reports} onRefresh={loadData} />
+            )}
+          </div>
+        )}
 
         <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">

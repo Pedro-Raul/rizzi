@@ -2,6 +2,7 @@
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 DROP TABLE IF EXISTS public.favorites CASCADE;
+DROP TABLE IF EXISTS public.business_reports CASCADE;
 DROP TABLE IF EXISTS public.products CASCADE;
 DROP TABLE IF EXISTS public.businesses CASCADE;
 DROP TABLE IF EXISTS public.categories CASCADE;
@@ -111,7 +112,49 @@ CREATE POLICY "Admins can delete any product" ON public.products FOR DELETE USIN
   EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
 );
 
--- 6. Crear tabla de favoritos
+-- 6. Reportes de negocios (usuarios reportan; admins revisan)
+CREATE TABLE public.business_reports (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    business_id UUID NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+    reporter_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    details TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'dismissed')),
+    admin_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE (business_id, reporter_id)
+);
+
+ALTER TABLE public.business_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can insert own business reports"
+ON public.business_reports FOR INSERT
+WITH CHECK (
+  auth.role() = 'authenticated'
+  AND reporter_id = auth.uid()
+);
+
+CREATE POLICY "Users can view own business reports"
+ON public.business_reports FOR SELECT
+USING (reporter_id = auth.uid());
+
+CREATE POLICY "Admins can view all business reports"
+ON public.business_reports FOR SELECT
+USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+);
+
+CREATE POLICY "Admins can update business reports"
+ON public.business_reports FOR UPDATE
+USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+)
+WITH CHECK (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- 7. Crear tabla de favoritos
 CREATE TABLE public.favorites (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
@@ -125,7 +168,7 @@ CREATE POLICY "Users can see their own favorites." ON public.favorites FOR SELEC
 CREATE POLICY "Users can insert their own favorites." ON public.favorites FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own favorites." ON public.favorites FOR DELETE USING (auth.uid() = user_id);
 
--- 7. Configurar Storage para imágenes públicas
+-- 8. Configurar Storage para imágenes públicas
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('public-images', 'public-images', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
@@ -174,7 +217,7 @@ USING (
   AND auth.role() = 'authenticated'
 );
 
--- 8. Trigger para crear perfil automáticamente al registrarse en Auth
+-- 9. Trigger para crear perfil automáticamente al registrarse en Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN

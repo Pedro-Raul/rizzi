@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { businessService } from '../services/business.service';
 import { productService } from '../services/product.service';
 import { storageService } from '../services/storage.service';
+import { reportService } from '../services/report.service';
 import ProductCard from '../components/business/ProductCard';
+import ReportBusinessModal from '../components/business/ReportBusinessModal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 import {
   Store,
   MapPin,
@@ -20,7 +23,8 @@ import {
   Music2,
   Globe,
   MessageCircle,
-  Trash2
+  Trash2,
+  Flag
 } from 'lucide-react';
 
 const emptyProductForm = {
@@ -78,9 +82,12 @@ const BusinessDetails = () => {
   const [productImageFile, setProductImageFile] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportSaving, setReportSaving] = useState(false);
 
   const isOwner = user && business && user.id === business.owner_id;
   const canManage = isOwner || isAdmin;
+  const canReport = user && business && user.id !== business.owner_id;
   const bestSellers = products.slice(0, 3);
   const featuredProducts = products.slice(3);
   const availableSocialLinks = business
@@ -156,6 +163,12 @@ const BusinessDetails = () => {
 
   const handleSaveProduct = async (event) => {
     event.preventDefault();
+
+    if (containsBlockedLanguage(formData.name) || containsBlockedLanguage(formData.description)) {
+      alert(MODERATION_MESSAGE);
+      return;
+    }
+
     setSaving(true);
 
     let image_url = editingProduct?.image_url || null;
@@ -239,6 +252,36 @@ const BusinessDetails = () => {
     setDeleting(false);
   };
 
+  const handleSubmitReport = async ({ reason, details }) => {
+    if (!user || !business) return;
+
+    if (containsBlockedLanguage(details)) {
+      alert(MODERATION_MESSAGE);
+      return;
+    }
+
+    setReportSaving(true);
+    const { error } = await reportService.createReport({
+      businessId: business.id,
+      reporterId: user.id,
+      reason,
+      details
+    });
+    setReportSaving(false);
+
+    if (error) {
+      if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        alert('Ya enviaste un reporte para este negocio. El equipo lo revisará.');
+      } else {
+        alert('No se pudo enviar el reporte: ' + error.message);
+      }
+      return;
+    }
+
+    setReportModalOpen(false);
+    alert('Gracias. Tu reporte fue enviado y será revisado por el equipo.');
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex justify-center items-center bg-light">
@@ -302,6 +345,28 @@ const BusinessDetails = () => {
               <p className="text-gray-600 leading-relaxed max-w-4xl">
                 {business.description || 'Este negocio aún no tiene una descripción detallada.'}
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {canReport && (
+                  <button
+                    type="button"
+                    onClick={() => setReportModalOpen(true)}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-red-600 border border-gray-200 bg-white px-3 py-2 rounded-lg hover:border-red-100 hover:bg-red-50/50 transition-colors"
+                  >
+                    <Flag size={16} />
+                    Reportar negocio
+                  </button>
+                )}
+                {!user && (
+                  <Link
+                    to="/login"
+                    state={{ from: `/business/${id}` }}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary border border-gray-200 bg-white px-3 py-2 rounded-lg transition-colors"
+                  >
+                    <Flag size={16} />
+                    Inicia sesión para reportar
+                  </Link>
+                )}
+              </div>
             </section>
 
             {canManage && !showForm && (
@@ -476,6 +541,15 @@ const BusinessDetails = () => {
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDialog(null)}
+      />
+
+      <ReportBusinessModal
+        key={business?.id}
+        open={reportModalOpen}
+        businessName={business?.name}
+        saving={reportSaving}
+        onClose={() => setReportModalOpen(false)}
+        onSubmit={handleSubmitReport}
       />
     </div>
   );
