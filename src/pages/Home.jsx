@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Store, Heart, X, ChevronRight } from 'lucide-react';
+import { MapPin, Store, Heart, X, ChevronRight, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { businessService } from '../services/business.service';
@@ -11,6 +11,8 @@ const Home = () => {
   const navigate = useNavigate();
 
   const [businesses, setBusinesses] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [favorites, setFavorites] = useState([]);
@@ -18,8 +20,22 @@ const Home = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
 
-    const { data: businessData } = await businessService.getBusinesses();
-    if (businessData) setBusinesses(businessData);
+    const [catRes, bizRes] = await Promise.all([
+      businessService.getCategories(),
+      businessService.getBusinesses(
+        selectedCategoryId ? { categoryId: selectedCategoryId } : {}
+      )
+    ]);
+
+    if (catRes.error) {
+      console.error('Error al cargar categorías:', catRes.error);
+    }
+    setCategories(catRes.data || []);
+
+    if (bizRes.error) {
+      console.error('Error al cargar negocios:', bizRes.error);
+    }
+    setBusinesses(bizRes.data || []);
 
     if (isAuthenticated && user) {
       const { data: favoriteData } = await favoriteService.getUserFavorites(user.id);
@@ -27,12 +43,17 @@ const Home = () => {
     }
 
     setLoading(false);
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, selectedCategoryId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedBusiness(null);
+  }, [selectedCategoryId]);
 
   const handleToggleFavorite = async (businessId) => {
     if (!isAuthenticated) {
@@ -83,7 +104,7 @@ const Home = () => {
           </section>
 
           <section id="directorio" className="px-6 pb-12 max-w-6xl mx-auto w-full">
-            <div className="border-t border-primary/20 pt-4 flex justify-between items-center mb-6">
+            <div className="border-t border-primary/20 pt-4 flex justify-between items-center mb-4 flex-wrap gap-3">
               <h2 className="text-2xl font-bold text-dark">Emprendimientos Destacados</h2>
               <button
                 onClick={fetchData}
@@ -91,6 +112,46 @@ const Home = () => {
               >
                 Actualizar
               </button>
+            </div>
+
+            <div className="mb-6 rounded-xl border border-gray-200 bg-white/90 p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                <Tag size={16} className="text-primary shrink-0" />
+                Filtrar por categoría
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId(null)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                    selectedCategoryId === null
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-primary/50'
+                  }`}
+                >
+                  Todas
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                      selectedCategoryId === category.id
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-primary/50'
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+              {categories.length === 0 && !loading && (
+                <p className="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                  No hay categorías en la base de datos. En Supabase (SQL Editor) ejecuta el script{' '}
+                  <span className="font-mono">seed_categories.sql</span> del repositorio.
+                </p>
+              )}
             </div>
 
             {loading ? (
@@ -123,8 +184,23 @@ const Home = () => {
             ) : (
               <div className="text-center py-12 bg-white/70 rounded-xl border border-dashed border-gray-300">
                 <Store className="mx-auto text-gray-400 mb-4" size={48} />
-                <h3 className="text-lg font-medium text-dark mb-1">Aún no hay negocios</h3>
-                <p className="text-gray-500">Sé el primero en registrar tu negocio en nuestra plataforma.</p>
+                <h3 className="text-lg font-medium text-dark mb-1">
+                  {selectedCategoryId ? 'Sin resultados en esta categoría' : 'Aún no hay negocios'}
+                </h3>
+                <p className="text-gray-500">
+                  {selectedCategoryId
+                    ? 'Prueba otra categoría o muestra todas.'
+                    : 'Sé el primero en registrar tu negocio en nuestra plataforma.'}
+                </p>
+                {selectedCategoryId && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategoryId(null)}
+                    className="mt-4 text-primary font-medium hover:underline"
+                  >
+                    Ver todas las categorías
+                  </button>
+                )}
               </div>
             )}
           </section>

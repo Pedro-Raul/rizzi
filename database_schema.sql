@@ -38,6 +38,25 @@ CREATE TABLE public.categories (
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Categories are viewable by everyone." ON public.categories FOR SELECT USING (true);
 
+INSERT INTO public.categories (name, slug, icon_url) VALUES
+  ('Alimentación y bebidas', 'alimentacion-bebidas', null),
+  ('Arte y manualidades', 'arte-manualidades', null),
+  ('Belleza y cuidado personal', 'belleza', null),
+  ('Moda y accesorios', 'moda', null),
+  ('Hogar y decoración', 'hogar', null),
+  ('Tecnología', 'tecnologia', null),
+  ('Servicios profesionales', 'servicios', null),
+  ('Salud y bienestar', 'salud', null),
+  ('Mascotas', 'mascotas', null),
+  ('Papelería y regalos', 'papeleria-regalos', null),
+  ('Deportes y recreación', 'deportes', null),
+  ('Educación y cursos', 'educacion', null),
+  ('Automotriz', 'automotriz', null),
+  ('Construcción y ferretería', 'construccion', null),
+  ('Eventos y entretenimiento', 'eventos', null),
+  ('Otros', 'otros', null)
+ON CONFLICT (slug) DO NOTHING;
+
 -- 4. Crear tabla de negocios
 CREATE TABLE public.businesses (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,

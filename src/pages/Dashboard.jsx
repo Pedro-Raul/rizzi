@@ -52,7 +52,10 @@ const Dashboard = () => {
     ]);
 
     if (bizRes.data) setBusinesses(bizRes.data);
-    if (catRes.data) setCategories(catRes.data);
+    setCategories(catRes.data || []);
+    if (catRes.error) {
+      console.error('Error al cargar categorías:', catRes.error);
+    }
 
     if (isAdmin) {
       const { data: reportData } = await reportService.listReportsForAdmin();
@@ -334,6 +337,11 @@ const Dashboard = () => {
                         <option key={category.id} value={category.id}>{category.name}</option>
                       ))}
                     </select>
+                    {categories.length === 0 && (
+                      <p className="text-xs text-amber-800 mt-2 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
+                        No hay categorías. En Supabase ejecuta <span className="font-mono">seed_categories.sql</span>.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>

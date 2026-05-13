@@ -1,11 +1,21 @@
 import { supabase } from '../utils/supabaseClient';
 
 export const businessService = {
-  async getBusinesses() {
-    const { data, error } = await supabase
+  /**
+   * @param {{ categoryId?: string | null }} [options]
+   * Si `categoryId` está definido, solo negocios de esa categoría (excluye sin categoría).
+   */
+  async getBusinesses(options = {}) {
+    let query = supabase
       .from('businesses')
       .select('*, categories(name, icon_url)')
       .order('created_at', { ascending: false });
+
+    if (options.categoryId) {
+      query = query.eq('category_id', options.categoryId);
+    }
+
+    const { data, error } = await query;
 
     return { data, error };
   },
