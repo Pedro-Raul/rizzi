@@ -24,7 +24,8 @@ import {
   Globe,
   MessageCircle,
   Trash2,
-  Flag
+  Flag,
+  MapPinned
 } from 'lucide-react';
 
 const emptyProductForm = {
@@ -338,7 +339,7 @@ const BusinessDetails = () => {
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-dark">{business.name}</h1>
                   <p className="text-gray-500 mt-1">
-                    {[business.categories?.name, business.address].filter(Boolean).join(' · ') || 'Negocio local'}
+                    {[business.categories?.name, business.neighborhood, business.address].filter(Boolean).join(' · ') || 'Negocio local'}
                   </p>
                 </div>
               </div>
@@ -473,6 +474,12 @@ const BusinessDetails = () => {
                 <MapPin size={18} className="text-primary shrink-0" />
                 <span>{business.address || 'Ubicación no disponible'}</span>
               </div>
+              {business.neighborhood?.trim() && (
+                <div className="flex gap-3">
+                  <MapPinned size={18} className="text-primary shrink-0" />
+                  <span>{business.neighborhood.trim()}</span>
+                </div>
+              )}
               <div className="flex gap-3">
                 <Phone size={18} className="text-primary shrink-0" />
                 <span>{business.phone || 'Teléfono no disponible'}</span>
@@ -507,6 +514,11 @@ const BusinessDetails = () => {
               {business.categories?.name && (
                 <span className="bg-gray-100 text-gray-600 rounded-full px-3 py-1 text-xs font-bold">
                   {business.categories.name}
+                </span>
+              )}
+              {business.neighborhood?.trim() && (
+                <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-bold">
+                  {business.neighborhood.trim()}
                 </span>
               )}
               <span className="bg-gray-100 text-gray-600 rounded-full px-3 py-1 text-xs font-bold">

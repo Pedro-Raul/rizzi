@@ -15,6 +15,7 @@ const emptyBusinessForm = {
   name: '',
   description: '',
   address: '',
+  neighborhood: '',
   phone: '',
   category_id: '',
   instagram_url: '',
@@ -92,6 +93,7 @@ const Dashboard = () => {
       name: business.name || '',
       description: business.description || '',
       address: business.address || '',
+      neighborhood: business.neighborhood || '',
       phone: business.phone || '',
       category_id: business.category_id || '',
       instagram_url: business.instagram_url || '',
@@ -131,7 +133,8 @@ const Dashboard = () => {
     if (
       containsBlockedLanguage(formData.name) ||
       containsBlockedLanguage(formData.description) ||
-      containsBlockedLanguage(formData.address)
+      containsBlockedLanguage(formData.address) ||
+      containsBlockedLanguage(formData.neighborhood)
     ) {
       alert(MODERATION_MESSAGE);
       return;
@@ -185,6 +188,7 @@ const Dashboard = () => {
       ...businessFields,
       ...socialFields,
       category_id: formData.category_id || null,
+      neighborhood: formData.neighborhood?.trim() || null,
       logo_url,
       banner_url
     };
@@ -352,6 +356,18 @@ const Dashboard = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
                   <input name="address" value={formData.address} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Barrio o zona</label>
+                  <input
+                    name="neighborhood"
+                    value={formData.neighborhood}
+                    onChange={handleChange}
+                    placeholder="Ej. Centro, La Candelaria, Chapinero"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Ayuda a agrupar negocios por barrio en las estadísticas públicas.</p>
                 </div>
 
                 <div>

@@ -72,6 +72,7 @@ CREATE TABLE public.businesses (
     website_url TEXT,
     whatsapp_url TEXT,
     address TEXT,
+    neighborhood TEXT,
     phone TEXT,
     is_approved BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
