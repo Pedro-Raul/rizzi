@@ -50,12 +50,27 @@ export const businessService = {
   },
 
   async deleteBusiness(businessId) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('businesses')
       .delete()
-      .eq('id', businessId);
+      .eq('id', businessId)
+      .select('id');
 
-    return { error };
+    if (error) {
+      return { error, deleted: 0 };
+    }
+
+    if (!data?.length) {
+      return {
+        error: {
+          message:
+            'No se eliminó ningún negocio. Si eres admin, ejecuta en Supabase el script admin_cascade_delete.sql (políticas RLS en favoritos y reportes) y comprueba que tu usuario tiene role = admin en public.users.'
+        },
+        deleted: 0
+      };
+    }
+
+    return { error: null, deleted: data.length };
   },
 
   async getCategories() {

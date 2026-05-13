@@ -20,6 +20,7 @@ DROP POLICY IF EXISTS "Users can insert own business reports" ON public.business
 DROP POLICY IF EXISTS "Users can view own business reports" ON public.business_reports;
 DROP POLICY IF EXISTS "Admins can view all business reports" ON public.business_reports;
 DROP POLICY IF EXISTS "Admins can update business reports" ON public.business_reports;
+DROP POLICY IF EXISTS "Admins can delete business reports" ON public.business_reports;
 
 CREATE POLICY "Users can insert own business reports"
 ON public.business_reports FOR INSERT
@@ -44,5 +45,13 @@ USING (
   EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
 )
 WITH CHECK (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+);
+
+DROP POLICY IF EXISTS "Admins can delete business reports" ON public.business_reports;
+CREATE POLICY "Admins can delete business reports"
+ON public.business_reports
+FOR DELETE
+USING (
   EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
 );

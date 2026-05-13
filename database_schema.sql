@@ -154,6 +154,12 @@ WITH CHECK (
   EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
 );
 
+CREATE POLICY "Admins can delete business reports"
+ON public.business_reports FOR DELETE
+USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+);
+
 -- 7. Crear tabla de favoritos
 CREATE TABLE public.favorites (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -167,6 +173,9 @@ ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can see their own favorites." ON public.favorites FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert their own favorites." ON public.favorites FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own favorites." ON public.favorites FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Admins can delete any favorite" ON public.favorites FOR DELETE USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin')
+);
 
 -- 8. Configurar Storage para imágenes públicas
 INSERT INTO storage.buckets (id, name, public)

@@ -96,3 +96,30 @@ USING (
       AND role = 'admin'
   )
 );
+
+-- CASCADE al borrar negocios: favoritos y reportes de otros usuarios.
+DROP POLICY IF EXISTS "Admins can delete any favorite" ON public.favorites;
+CREATE POLICY "Admins can delete any favorite"
+ON public.favorites
+FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE id = auth.uid()
+      AND role = 'admin'
+  )
+);
+
+DROP POLICY IF EXISTS "Admins can delete business reports" ON public.business_reports;
+CREATE POLICY "Admins can delete business reports"
+ON public.business_reports
+FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE id = auth.uid()
+      AND role = 'admin'
+  )
+);
