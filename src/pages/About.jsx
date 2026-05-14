@@ -1,6 +1,19 @@
 import { Store, Users, MapPin } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { statsService } from '../services/stats.service';
 
 const About = () => {
+  const [stats, setStats] = useState({ businesses: 0, users: 0, neighborhoods: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { data } = await statsService.getPublicStats();
+      if (data) setStats(data);
+    };
+    fetchStats();
+  }, []);
+
+  const formatCount = (n) => new Intl.NumberFormat('es').format(n ?? 0);
   return (
     <div className="flex-1">
       {/* Hero Section */}
@@ -36,7 +49,7 @@ const About = () => {
               <Store size={28} />
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-dark">0</h3>
+              <h3 className="text-3xl font-bold text-dark">{formatCount(stats.businesses)}</h3>
               <p className="text-gray-500 font-medium text-sm mt-1">Negocios registrados</p>
             </div>
           </div>
@@ -47,7 +60,7 @@ const About = () => {
               <Users size={28} />
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-dark">0</h3>
+              <h3 className="text-3xl font-bold text-dark">{formatCount(stats.users)}</h3>
               <p className="text-gray-500 font-medium text-sm mt-1">Usuarios activos</p>
             </div>
           </div>
@@ -58,7 +71,7 @@ const About = () => {
               <MapPin size={28} />
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-dark">0</h3>
+              <h3 className="text-3xl font-bold text-dark">{formatCount(stats.neighborhoods)}</h3>
               <p className="text-gray-500 font-medium text-sm mt-1">Barrios conectados</p>
             </div>
           </div>
