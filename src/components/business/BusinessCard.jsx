@@ -49,7 +49,7 @@ const BusinessCard = ({
           </button>
         </div>
         
-        <p className="text-gray-500 text-sm line-clamp-2 mt-1 mb-4 flex-1">
+        <p className="text-gray-500 text-sm line-clamp-2 mt-1 mb-4">
           {business.description || 'Sin descripción disponible.'}
         </p>
 
