@@ -44,7 +44,7 @@ const socialLinks = [
 
 const ProductSection = ({ title, products, isOwner, onEdit, onDelete }) => (
   <section className="space-y-4">
-    <div className="bg-primary text-white font-bold text-center py-2 rounded-lg">
+    <div className="text-white font-bold text-center py-2 rounded-lg" style={{ backgroundColor: isOwner?.theme_color || '#8B7DFA' }}>
       {title}
     </div>
     {products.length > 0 ? (
@@ -306,7 +306,10 @@ const BusinessDetails = () => {
 
   return (
     <div className="flex-1 bg-[#F3F1FB] px-4 md:px-8 py-6 md:py-10">
-      <div className="-mx-4 -mt-6 md:-mx-8 md:-mt-10 h-44 md:h-60 bg-primary overflow-hidden">
+      <div 
+        className="-mx-4 -mt-6 md:-mx-8 md:-mt-10 h-44 md:h-60 overflow-hidden" 
+        style={{ backgroundColor: business.theme_color || '#8B7DFA' }}
+      >
         {business.banner_url && (
           <img
             src={business.banner_url}
@@ -373,7 +376,8 @@ const BusinessDetails = () => {
             {canManage && !showForm && (
               <button
                 onClick={openCreateProductForm}
-                className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-90 flex items-center gap-2 transition-all"
+                className="text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-90 flex items-center gap-2 transition-all"
+                style={{ backgroundColor: business.theme_color || '#8B7DFA' }}
               >
                 <Plus size={18} />
                 Añadir Producto
@@ -442,14 +446,14 @@ const BusinessDetails = () => {
                 <ProductSection
                   title="Más vendidos"
                   products={bestSellers}
-                  isOwner={canManage}
+                  isOwner={business}
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
                 />
                 <ProductSection
                   title="Destacados"
                   products={featuredProducts}
-                  isOwner={canManage}
+                  isOwner={business}
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
                 />
@@ -471,17 +475,17 @@ const BusinessDetails = () => {
             <h2 className="text-xl font-bold text-dark mb-5">Información del local</h2>
             <div className="space-y-4 text-sm text-gray-600">
               <div className="flex gap-3">
-                <MapPin size={18} className="text-primary shrink-0" />
+                <MapPin size={18} className="shrink-0" style={{ color: business.theme_color || '#8B7DFA' }} />
                 <span>{business.address || 'Ubicación no disponible'}</span>
               </div>
               {business.neighborhood?.trim() && (
                 <div className="flex gap-3">
-                  <MapPinned size={18} className="text-primary shrink-0" />
+                  <MapPinned size={18} className="shrink-0" style={{ color: business.theme_color || '#8B7DFA' }} />
                   <span>{business.neighborhood.trim()}</span>
                 </div>
               )}
               <div className="flex gap-3">
-                <Phone size={18} className="text-primary shrink-0" />
+                <Phone size={18} className="shrink-0" style={{ color: business.theme_color || '#8B7DFA' }} />
                 <span>{business.phone || 'Teléfono no disponible'}</span>
               </div>
             </div>
@@ -499,7 +503,11 @@ const BusinessDetails = () => {
                         href={business[link.key]}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium hover:bg-primary/15 transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        style={{ 
+                          color: business.theme_color || '#8B7DFA',
+                          backgroundColor: `${business.theme_color || '#8B7DFA'}1A`
+                        }}
                       >
                         <Icon size={16} />
                         {link.label}

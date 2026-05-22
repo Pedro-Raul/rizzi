@@ -28,8 +28,11 @@ const BusinessCard = ({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center">
-             <Store size={40} className="text-primary/40" />
+          <div 
+            className={`w-full h-full flex items-center justify-center ${!business.theme_color ? 'bg-gradient-to-r from-primary/20 to-secondary/20' : ''}`}
+            style={business.theme_color ? { backgroundColor: `${business.theme_color}33` } : {}}
+          >
+             <Store size={40} className={!business.theme_color ? "text-primary/40" : ""} style={business.theme_color ? { color: business.theme_color } : {}} />
           </div>
         )}
       </div>
@@ -53,9 +56,9 @@ const BusinessCard = ({
           {business.description || 'Sin descripción disponible.'}
         </p>
 
-        <div className="flex items-center gap-1 text-gray-400 text-xs mt-auto">
+        <div className="flex items-center gap-1 text-xs mt-auto" style={{ color: business.theme_color ? business.theme_color : '#9ca3af' }}>
           <MapPin size={14} />
-          <span className="line-clamp-1">{business.address || 'Ubicación no especificada'}</span>
+          <span className="line-clamp-1 text-gray-500">{business.address || 'Ubicación no especificada'}</span>
         </div>
       </div>
     </>
@@ -67,7 +70,11 @@ const BusinessCard = ({
   // Si pasamos onClick, es un div seleccionable (como en la página de inicio rediseñada)
   if (onClick) {
     return (
-      <div onClick={() => onClick(business)} className={containerClasses}>
+      <div 
+        onClick={() => onClick(business)} 
+        className={containerClasses}
+        style={isSelected && business.theme_color ? { borderColor: business.theme_color, boxShadow: `0 0 0 2px ${business.theme_color}80` } : {}}
+      >
         {cardContent}
       </div>
     );
@@ -75,7 +82,11 @@ const BusinessCard = ({
 
   // De lo contrario, es un link normal que navega al detalle
   return (
-    <Link to={`/business/${business.id}`} className={containerClasses}>
+    <Link 
+      to={`/business/${business.id}`} 
+      className={containerClasses}
+      style={isSelected && business.theme_color ? { borderColor: business.theme_color, boxShadow: `0 0 0 2px ${business.theme_color}80` } : {}}
+    >
       {cardContent}
     </Link>
   );

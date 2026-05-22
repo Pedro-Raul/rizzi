@@ -21,8 +21,8 @@ const emptyBusinessForm = {
   instagram_url: '',
   facebook_url: '',
   tiktok_url: '',
-  website_url: '',
-  whatsapp_url: ''
+  whatsapp_url: '',
+  theme_color: '#8B7DFA'
 };
 
 const Dashboard = () => {
@@ -100,7 +100,8 @@ const Dashboard = () => {
       facebook_url: business.facebook_url || '',
       tiktok_url: business.tiktok_url || '',
       website_url: business.website_url || '',
-      whatsapp_url: business.whatsapp_url || ''
+      whatsapp_url: business.whatsapp_url || '',
+      theme_color: business.theme_color || '#8B7DFA'
     });
     setLogoFile(null);
     setBannerFile(null);
@@ -368,6 +369,21 @@ const Dashboard = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
                   />
                   <p className="text-xs text-gray-500 mt-1">Ayuda a agrupar negocios por barrio en las estadísticas públicas.</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Color de la marca</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      name="theme_color"
+                      value={formData.theme_color}
+                      onChange={handleChange}
+                      className="w-10 h-10 rounded cursor-pointer border-0 p-0"
+                    />
+                    <span className="text-sm text-gray-500 uppercase">{formData.theme_color}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Personaliza el color de los botones y detalles en el perfil de tu negocio.</p>
                 </div>
 
                 <div>
