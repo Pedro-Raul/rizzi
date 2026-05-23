@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Store, Heart, X, ChevronRight, Tag, Search } from 'lucide-react';
+import { MapPin, Store, Heart, X, ChevronRight, Tag, Search, List, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { businessService } from '../services/business.service';
 import { favoriteService } from '../services/favorite.service';
 import BusinessCard from '../components/business/BusinessCard';
+import BusinessMap from '../components/business/BusinessMap';
 
 const Home = () => {
   const { user, isAuthenticated } = useAuth();
@@ -18,6 +19,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [favorites, setFavorites] = useState([]);
+  const [viewMode, setViewMode] = useState('list');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -111,12 +113,32 @@ const Home = () => {
           <section id="directorio" className="px-6 pb-12 max-w-6xl mx-auto w-full">
             <div className="border-t border-primary/20 pt-4 flex justify-between items-center mb-4 flex-wrap gap-3">
               <h2 className="text-2xl font-bold text-dark">Emprendimientos Destacados</h2>
-              <button
-                onClick={fetchData}
-                className="text-primary border border-primary/50 hover:bg-primary/10 px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
-              >
-                Actualizar
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="bg-white rounded-lg p-1 flex border border-gray-200 shadow-sm">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                      viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    <List size={16} /> Lista
+                  </button>
+                  <button
+                    onClick={() => setViewMode('map')}
+                    className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                      viewMode === 'map' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    <Map size={16} /> Mapa
+                  </button>
+                </div>
+                <button
+                  onClick={fetchData}
+                  className="text-primary border border-primary/50 hover:bg-primary/10 px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+                >
+                  Actualizar
+                </button>
+              </div>
             </div>
 
             <form 
@@ -209,19 +231,23 @@ const Home = () => {
                 ))}
               </div>
             ) : businesses.length > 0 ? (
-              <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
-                {businesses.map((business) => (
-                  <div key={business.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
-                    <BusinessCard
-                      business={business}
-                      onClick={handleCardClick}
-                      isSelected={selectedBusiness?.id === business.id}
-                      isFavorite={favorites.includes(business.id)}
-                      onToggleFavorite={handleToggleFavorite}
-                    />
-                  </div>
-                ))}
-              </div>
+              viewMode === 'list' ? (
+                <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
+                  {businesses.map((business) => (
+                    <div key={business.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
+                      <BusinessCard
+                        business={business}
+                        onClick={handleCardClick}
+                        isSelected={selectedBusiness?.id === business.id}
+                        isFavorite={favorites.includes(business.id)}
+                        onToggleFavorite={handleToggleFavorite}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <BusinessMap businesses={businesses} onBusinessClick={handleCardClick} />
+              )
             ) : (
               <div className="text-center py-12 bg-white/70 rounded-xl border border-dashed border-gray-300">
                 <Store className="mx-auto text-gray-400 mb-4" size={48} />

@@ -9,6 +9,7 @@ import { Store, Plus, X, Image as ImageIcon, Pencil, Trash2, Flag } from 'lucide
 import BusinessCard from '../components/business/BusinessCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import AdminReportsPanel from '../components/admin/AdminReportsPanel';
+import LocationPicker from '../components/business/LocationPicker';
 import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 
 const emptyBusinessForm = {
@@ -22,7 +23,9 @@ const emptyBusinessForm = {
   facebook_url: '',
   tiktok_url: '',
   whatsapp_url: '',
-  theme_color: '#8B7DFA'
+  theme_color: '#8B7DFA',
+  latitude: null,
+  longitude: null
 };
 
 const Dashboard = () => {
@@ -101,7 +104,9 @@ const Dashboard = () => {
       tiktok_url: business.tiktok_url || '',
       website_url: business.website_url || '',
       whatsapp_url: business.whatsapp_url || '',
-      theme_color: business.theme_color || '#8B7DFA'
+      theme_color: business.theme_color || '#8B7DFA',
+      latitude: business.latitude || null,
+      longitude: business.longitude || null
     });
     setLogoFile(null);
     setBannerFile(null);
@@ -369,6 +374,16 @@ const Dashboard = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
                   />
                   <p className="text-xs text-gray-500 mt-1">Ayuda a agrupar negocios por barrio en las estadísticas públicas.</p>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg p-5">
+                  <LocationPicker
+                    latitude={formData.latitude}
+                    longitude={formData.longitude}
+                    onChange={({ latitude, longitude }) => 
+                      setFormData(prev => ({ ...prev, latitude, longitude }))
+                    }
+                  />
                 </div>
 
                 <div>
