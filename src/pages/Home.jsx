@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Store, Heart, X, ChevronRight, Tag, Search, List, Map } from 'lucide-react';
+import { MapPin, Store, Heart, X, ChevronRight, Tag, Search, List, Map, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { businessService } from '../services/business.service';
@@ -294,6 +294,14 @@ const Home = () => {
               <div className="p-6 flex-1 flex flex-col relative -mt-8">
                 <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 relative z-10 mb-6 flex flex-col gap-2">
                   <h2 className="text-2xl font-bold text-dark">{selectedBusiness.name}</h2>
+                  
+                  {selectedBusiness.rating > 0 && (
+                    <div className="flex items-center gap-1 text-amber-500 text-sm font-medium">
+                      <Star size={14} fill="currentColor" />
+                      <span>{Number(selectedBusiness.rating).toFixed(1)}</span>
+                      <span className="text-gray-400 font-normal">({selectedBusiness.reviews_count} reseñas)</span>
+                    </div>
+                  )}
 
                   {selectedBusiness.categories && (
                     <span className="text-sm font-medium text-gray-500">

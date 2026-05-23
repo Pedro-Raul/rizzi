@@ -8,6 +8,7 @@ import { reportService } from '../services/report.service';
 import ProductCard from '../components/business/ProductCard';
 import ReportBusinessModal from '../components/business/ReportBusinessModal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ReviewSection from '../components/business/ReviewSection';
 import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 import {
   Store,
@@ -25,7 +26,8 @@ import {
   MessageCircle,
   Trash2,
   Flag,
-  MapPinned
+  MapPinned,
+  Star
 } from 'lucide-react';
 
 const emptyProductForm = {
@@ -341,6 +343,15 @@ const BusinessDetails = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-dark">{business.name}</h1>
+                  
+                  {business.rating > 0 && (
+                    <div className="flex items-center gap-1 text-amber-500 font-medium mt-1 mb-1">
+                      <Star size={16} fill="currentColor" />
+                      <span>{Number(business.rating).toFixed(1)}</span>
+                      <span className="text-gray-400 font-normal text-sm">({business.reviews_count} reseñas)</span>
+                    </div>
+                  )}
+
                   <p className="text-gray-500 mt-1">
                     {[business.categories?.name, business.neighborhood, business.address].filter(Boolean).join(' · ') || 'Negocio local'}
                   </p>
@@ -469,6 +480,8 @@ const BusinessDetails = () => {
                 </p>
               </div>
             )}
+
+            <ReviewSection businessId={business.id} onReviewAdded={loadData} />
           </main>
 
           <aside className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:sticky lg:top-28">

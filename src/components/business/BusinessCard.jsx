@@ -1,4 +1,4 @@
-import { Store, MapPin, Heart } from 'lucide-react';
+import { Store, MapPin, Heart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const BusinessCard = ({ 
@@ -52,7 +52,19 @@ const BusinessCard = ({
           </button>
         </div>
         
-        <p className="text-gray-500 text-sm line-clamp-2 mt-1 mb-4">
+        <div className="flex items-center gap-2 mt-1 mb-1">
+          {business.rating > 0 ? (
+            <div className="flex items-center gap-1 text-amber-500 text-xs font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+              <Star size={12} fill="currentColor" />
+              <span>{Number(business.rating).toFixed(1)}</span>
+              <span className="text-amber-700/60 font-normal">({business.reviews_count})</span>
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">Nuevo</div>
+          )}
+        </div>
+
+        <p className="text-gray-500 text-sm line-clamp-2 mb-4">
           {business.description || 'Sin descripción disponible.'}
         </p>
 
