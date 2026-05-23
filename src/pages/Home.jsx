@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Store, Heart, X, ChevronRight, Tag } from 'lucide-react';
+import { MapPin, Store, Heart, X, ChevronRight, Tag, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { businessService } from '../services/business.service';
@@ -13,6 +13,8 @@ const Home = () => {
   const [businesses, setBusinesses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [favorites, setFavorites] = useState([]);
@@ -22,9 +24,10 @@ const Home = () => {
 
     const [catRes, bizRes] = await Promise.all([
       businessService.getCategories(),
-      businessService.getBusinesses(
-        selectedCategoryId ? { categoryId: selectedCategoryId } : {}
-      )
+      businessService.getBusinesses({
+        ...(selectedCategoryId ? { categoryId: selectedCategoryId } : {}),
+        ...(activeSearch ? { searchQuery: activeSearch } : {})
+      })
     ]);
 
     if (catRes.error) {
@@ -43,7 +46,7 @@ const Home = () => {
     }
 
     setLoading(false);
-  }, [isAuthenticated, user, selectedCategoryId]);
+  }, [isAuthenticated, user, selectedCategoryId, activeSearch]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -115,6 +118,42 @@ const Home = () => {
                 Actualizar
               </button>
             </div>
+
+            <form 
+              onSubmit={(e) => { e.preventDefault(); setActiveSearch(searchQuery); }}
+              className="mb-6 flex gap-2"
+            >
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={20} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar negocios por nombre o descripción..."
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-white/90 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all shadow-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setActiveSearch('');
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                className="bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                Buscar
+              </button>
+            </form>
 
             <div className="mb-6 rounded-xl border border-gray-200 bg-white/90 p-4 shadow-sm">
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">

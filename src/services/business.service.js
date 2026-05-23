@@ -15,6 +15,10 @@ export const businessService = {
       query = query.eq('category_id', options.categoryId);
     }
 
+    if (options.searchQuery) {
+      query = query.or(`name.ilike.%${options.searchQuery}%,description.ilike.%${options.searchQuery}%`);
+    }
+
     const { data, error } = await query;
 
     return { data, error };
