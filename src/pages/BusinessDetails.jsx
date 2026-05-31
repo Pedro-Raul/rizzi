@@ -9,6 +9,9 @@ import ProductCard from '../components/business/ProductCard';
 import ReportBusinessModal from '../components/business/ReportBusinessModal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ReviewSection from '../components/business/ReviewSection';
+import CartDrawer from '../components/cart/CartDrawer';
+import CheckoutModal from '../components/cart/CheckoutModal';
+import { useCart } from '../context/CartContext';
 import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 import {
   Store,
@@ -27,7 +30,8 @@ import {
   Trash2,
   Flag,
   MapPinned,
-  Star
+  Star,
+  ShoppingCart
 } from 'lucide-react';
 
 const emptyProductForm = {
@@ -44,7 +48,7 @@ const socialLinks = [
   { key: 'whatsapp_url', label: 'WhatsApp', icon: MessageCircle }
 ];
 
-const ProductSection = ({ title, products, isOwner, onEdit, onDelete }) => (
+const ProductSection = ({ title, products, isOwner, onEdit, onDelete, onToggleActive }) => (
   <section className="space-y-4">
     <div className="text-white font-bold text-center py-2 rounded-lg" style={{ backgroundColor: isOwner?.theme_color || '#8B7DFA' }}>
       {title}
@@ -58,6 +62,7 @@ const ProductSection = ({ title, products, isOwner, onEdit, onDelete }) => (
             isOwner={isOwner}
             onEdit={onEdit}
             onDelete={onDelete}
+            onToggleActive={onToggleActive}
           />
         ))}
       </div>
@@ -87,6 +92,10 @@ const BusinessDetails = () => {
   const [deleting, setDeleting] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportSaving, setReportSaving] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  const { itemCount } = useCart();
 
   const isOwner = user && business && user.id === business.owner_id;
   const canManage = isOwner || isAdmin;
@@ -109,7 +118,8 @@ const BusinessDetails = () => {
 
     setBusiness(businessData);
 
-    const { data: productData } = await productService.getBusinessProducts(id);
+    const isBusinessOwner = user && user.id === businessData.owner_id;
+    const { data: productData } = await productService.getBusinessProducts(id, isBusinessOwner || isAdmin);
     if (productData) {
       setProducts(productData);
     }
@@ -160,7 +170,8 @@ const BusinessDetails = () => {
   };
 
   const refreshProducts = async () => {
-    const { data } = await productService.getBusinessProducts(id);
+    const isBusinessOwner = user && business && user.id === business.owner_id;
+    const { data } = await productService.getBusinessProducts(id, isBusinessOwner || isAdmin);
     if (data) setProducts(data);
   };
 
@@ -205,6 +216,16 @@ const BusinessDetails = () => {
     }
 
     setSaving(false);
+  };
+
+  const handleToggleActiveProduct = async (product) => {
+    const newActiveState = !product.is_active;
+    const { error } = await productService.updateProduct(product.id, { is_active: newActiveState });
+    if (!error) {
+      setProducts(products.map(p => p.id === product.id ? { ...p, is_active: newActiveState } : p));
+    } else {
+      alert(`Error al actualizar estado: ${error.message}`);
+    }
   };
 
   const handleDeleteProduct = (productId) => {
@@ -460,6 +481,7 @@ const BusinessDetails = () => {
                   isOwner={business}
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
+                  onToggleActive={handleToggleActiveProduct}
                 />
                 <ProductSection
                   title="Destacados"
@@ -467,6 +489,7 @@ const BusinessDetails = () => {
                   isOwner={business}
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
+                  onToggleActive={handleToggleActiveProduct}
                 />
               </>
             ) : (
@@ -584,6 +607,40 @@ const BusinessDetails = () => {
         onClose={() => setReportModalOpen(false)}
         onSubmit={handleSubmitReport}
       />
+
+      <CartDrawer 
+        open={cartDrawerOpen} 
+        onClose={() => setCartDrawerOpen(false)} 
+        onCheckout={() => {
+          setCartDrawerOpen(false);
+          setCheckoutModalOpen(true);
+        }}
+      />
+
+      <CheckoutModal 
+        open={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        businessId={business?.id}
+        deliveryPoints={business?.delivery_points || []}
+        onOrderSuccess={() => {
+          alert('¡Pedido realizado con éxito!');
+        }}
+      />
+
+      {!isOwner && itemCount > 0 && (
+        <button
+          onClick={() => setCartDrawerOpen(true)}
+          className="fixed bottom-6 right-6 bg-primary hover:bg-opacity-90 text-white p-4 rounded-full shadow-2xl transition-all z-30 flex items-center justify-center group"
+          style={{ backgroundColor: business?.theme_color || '#8B7DFA' }}
+        >
+          <div className="relative">
+            <ShoppingCart size={28} />
+            <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white">
+              {itemCount}
+            </span>
+          </div>
+        </button>
+      )}
     </div>
   );
 };

@@ -2,13 +2,18 @@ import { supabase } from '../utils/supabaseClient';
 
 export const productService = {
   // Obtener todos los productos de un negocio específico
-  async getBusinessProducts(businessId) {
-    const { data, error } = await supabase
+  async getBusinessProducts(businessId, includeInactive = false) {
+    let query = supabase
       .from('products')
       .select('*')
       .eq('business_id', businessId)
-      .eq('is_active', true)
       .order('created_at', { ascending: false });
+
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query;
 
     return { data, error };
   },

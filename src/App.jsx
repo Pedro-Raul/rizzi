@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import About from './pages/About';
@@ -12,20 +13,22 @@ import Favorites from './pages/Favorites';
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/business/:id" element={<BusinessDetails />} />
-            {/* Rutas protegidas se agregarán aquí */}
-          </Route>
-        </Routes>
-      </Router>
+      <CartProvider>
+        <Router>
+          <Routes>
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/business/:id" element={<BusinessDetails />} />
+              {/* Rutas protegidas se agregarán aquí */}
+            </Route>
+          </Routes>
+        </Router>
+      </CartProvider>
     </AuthProvider>
   );
 }
