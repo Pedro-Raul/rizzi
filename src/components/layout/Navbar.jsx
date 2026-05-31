@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import { ShoppingCart } from 'lucide-react';
 
 const navLinks = [
   { to: '/', label: 'Inicio' },
@@ -7,8 +9,9 @@ const navLinks = [
   { to: '/about', label: 'Quiénes somos' }
 ];
 
-const Navbar = () => {
+const Navbar = ({ onCartOpen }) => {
   const { isAuthenticated } = useAuth();
+  const { itemCount } = useCart();
   const { pathname } = useLocation();
 
   const getLinkClass = (to) => {
@@ -34,6 +37,20 @@ const Navbar = () => {
         </div>
       </div>
       <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={onCartOpen}
+          className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-colors"
+          title="Abrir carrito"
+          aria-label={`Abrir carrito con ${itemCount} productos`}
+        >
+          <ShoppingCart size={20} />
+          {itemCount > 0 && (
+            <span className="absolute -right-2 -top-2 min-w-5 h-5 px-1 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
+              {itemCount > 99 ? '99+' : itemCount}
+            </span>
+          )}
+        </button>
         {isAuthenticated ? (
           <Link
             to="/dashboard"

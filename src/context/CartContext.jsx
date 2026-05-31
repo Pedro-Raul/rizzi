@@ -25,11 +25,24 @@ export const CartProvider = ({ children }) => {
     }
   }, [items, businessId]);
 
-  const addToCart = (product, quantity = 1) => {
-    if (businessId && businessId !== product.business_id) {
-      // Diferente negocio, podríamos advertir al usuario, pero por ahora reemplazamos
-      // O podemos lanzar un error que la UI atrape para advertir.
+  const buildCartItem = (product, quantity) => ({
+    product_id: product.id,
+    product_name: product.name,
+    price: product.price,
+    image_url: product.image_url,
+    business_id: product.business_id,
+    quantity
+  });
+
+  const addToCart = (product, quantity = 1, options = {}) => {
+    if (businessId && businessId !== product.business_id && !options.replace) {
       throw new Error('DIFFERENT_BUSINESS');
+    }
+
+    if (options.replace) {
+      setBusinessId(product.business_id);
+      setItems([buildCartItem(product, quantity)]);
+      return;
     }
 
     if (!businessId) {
@@ -45,17 +58,7 @@ export const CartProvider = ({ children }) => {
             : item
         );
       }
-      return [
-        ...prevItems,
-        {
-          product_id: product.id,
-          product_name: product.name,
-          price: product.price,
-          image_url: product.image_url,
-          business_id: product.business_id,
-          quantity
-        }
-      ];
+      return [...prevItems, buildCartItem(product, quantity)];
     });
   };
 

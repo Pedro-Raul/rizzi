@@ -1,4 +1,4 @@
-import { Package, Pencil, Trash2, Power, Plus, ShoppingCart } from 'lucide-react';
+import { Package, Pencil, Trash2, Power, ShoppingCart } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 const ProductCard = ({ product, isOwner, onDelete, onEdit, onToggleActive }) => {
@@ -6,7 +6,21 @@ const ProductCard = ({ product, isOwner, onDelete, onEdit, onToggleActive }) => 
   const isActive = product.is_active;
 
   const handleAddToCart = () => {
-    addToCart(product, 1);
+    try {
+      addToCart(product, 1);
+    } catch (error) {
+      if (error.message !== 'DIFFERENT_BUSINESS') {
+        throw error;
+      }
+
+      const shouldReplace = window.confirm(
+        'Tu carrito tiene productos de otro negocio. ¿Quieres vaciarlo y agregar este producto?'
+      );
+
+      if (shouldReplace) {
+        addToCart(product, 1, { replace: true });
+      }
+    }
   };
 
   return (
