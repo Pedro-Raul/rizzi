@@ -1,7 +1,12 @@
 import { supabase } from '../utils/supabaseClient';
+import { containsBlockedLanguageInFields, createModerationError } from '../utils/moderation';
 
 export const authService = {
   async register(email, password, fullName) {
+    if (containsBlockedLanguageInFields([fullName])) {
+      return { data: null, error: createModerationError() };
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

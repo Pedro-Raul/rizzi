@@ -170,7 +170,24 @@ const BANNED_WORDS = [
   'puticlub',
   'prostibulo',
   'escoria',
-  'escorias'
+  'escorias',
+  'gonorrea',
+  'gonorreas',
+  'careverga',
+  'carechimba',
+  'caremonda',
+  'hijueperra',
+  'hijueperras',
+  'triplehijueputa',
+  'triplehijueputas',
+  'malnacido',
+  'malnacida',
+  'malnacidos',
+  'malnacidas',
+  'pirobo',
+  'piroba',
+  'pirobos',
+  'pirobas'
 ];
 
 const BANNED_SET = new Set(BANNED_WORDS.map((w) => stripAccents(w)));
@@ -283,6 +300,14 @@ export function containsBlockedLanguage(text) {
   }
 
   return false;
+}
+
+export function containsBlockedLanguageInFields(fields) {
+  return fields.some((field) => containsBlockedLanguage(field));
+}
+
+export function createModerationError() {
+  return { message: MODERATION_MESSAGE };
 }
 
 export const MODERATION_MESSAGE =

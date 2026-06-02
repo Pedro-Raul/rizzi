@@ -1,4 +1,12 @@
 import { supabase } from '../utils/supabaseClient';
+import { containsBlockedLanguageInFields, createModerationError } from '../utils/moderation';
+
+const businessTextFields = (businessData) => [
+  businessData?.name,
+  businessData?.description,
+  businessData?.address,
+  businessData?.neighborhood
+];
 
 export const businessService = {
   /**
@@ -41,6 +49,10 @@ export const businessService = {
   },
 
   async createBusiness(businessData) {
+    if (containsBlockedLanguageInFields(businessTextFields(businessData))) {
+      return { data: null, error: createModerationError() };
+    }
+
     const { data, error } = await supabase
       .from('businesses')
       .insert([businessData])
@@ -50,6 +62,10 @@ export const businessService = {
   },
 
   async updateBusiness(businessId, businessData) {
+    if (containsBlockedLanguageInFields(businessTextFields(businessData))) {
+      return { data: null, error: createModerationError() };
+    }
+
     const { data, error } = await supabase
       .from('businesses')
       .update(businessData)

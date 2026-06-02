@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
+import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 
 const Register = () => {
   const [fullName, setFullName] = useState('');
@@ -12,8 +13,14 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (containsBlockedLanguage(fullName)) {
+      setError(MODERATION_MESSAGE);
+      return;
+    }
+
+    setLoading(true);
 
     const { error } = await authService.register(email, password, fullName);
     

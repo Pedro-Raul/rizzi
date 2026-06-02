@@ -1,4 +1,10 @@
 import { supabase } from '../utils/supabaseClient';
+import { containsBlockedLanguageInFields, createModerationError } from '../utils/moderation';
+
+const productTextFields = (productData) => [
+  productData?.name,
+  productData?.description
+];
 
 export const productService = {
   // Obtener todos los productos de un negocio específico
@@ -20,6 +26,10 @@ export const productService = {
 
   // Crear un nuevo producto
   async createProduct(productData) {
+    if (containsBlockedLanguageInFields(productTextFields(productData))) {
+      return { data: null, error: createModerationError() };
+    }
+
     const { data, error } = await supabase
       .from('products')
       .insert([productData])
@@ -30,6 +40,10 @@ export const productService = {
 
   // Actualizar un producto existente
   async updateProduct(productId, productData) {
+    if (containsBlockedLanguageInFields(productTextFields(productData))) {
+      return { data: null, error: createModerationError() };
+    }
+
     const { data, error } = await supabase
       .from('products')
       .update(productData)
