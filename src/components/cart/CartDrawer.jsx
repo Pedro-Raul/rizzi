@@ -3,6 +3,7 @@ import { X, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 
 const CartDrawer = ({ open, onClose, onCheckout }) => {
   const { items, removeFromCart, updateQuantity, total, itemCount } = useCart();
+  const cartItems = Array.isArray(items) ? items : [];
 
   if (!open) return null;
 
@@ -28,13 +29,13 @@ const CartDrawer = ({ open, onClose, onCheckout }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-          {items.length === 0 ? (
+          {cartItems.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-3">
               <ShoppingBag size={48} className="opacity-20" />
               <p>Tu carrito está vacío</p>
             </div>
           ) : (
-            items.map((item) => (
+            cartItems.map((item) => (
               <div key={item.product_id} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex gap-3">
                 <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                   {item.image_url ? (
@@ -93,7 +94,7 @@ const CartDrawer = ({ open, onClose, onCheckout }) => {
           </div>
           <button 
             onClick={onCheckout}
-            disabled={items.length === 0}
+            disabled={cartItems.length === 0}
             className="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Confirmar Pedido

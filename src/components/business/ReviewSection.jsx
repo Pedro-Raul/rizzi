@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Star, MessageSquare } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { reviewService } from '../../services/review.service';
@@ -16,18 +16,12 @@ const ReviewSection = ({ businessId, onReviewAdded }) => {
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  useEffect(() => {
-    fetchReviews();
-  }, [businessId, user]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     setLoading(true);
     
     // Fetch all reviews for this business
     const { data } = await reviewService.getBusinessReviews(businessId);
-    if (data) {
-      setReviews(data);
-    }
+    setReviews(Array.isArray(data) ? data : []);
 
     // Check if the current user has already reviewed
     if (isAuthenticated && user) {
@@ -40,7 +34,12 @@ const ReviewSection = ({ businessId, onReviewAdded }) => {
     }
     
     setLoading(false);
-  };
+  }, [businessId, isAuthenticated, user]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchReviews();
+  }, [fetchReviews]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

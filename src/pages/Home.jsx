@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Store, Heart, X, ChevronRight, Tag, Search, List, Map, Star } from 'lucide-react';
+import { MapPin, Store, Heart, X, ChevronRight, Tag, Building2, Users, MapPinned } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { businessService } from '../services/business.service';
 import { favoriteService } from '../services/favorite.service';
+import { statsService } from '../services/stats.service';
 import BusinessCard from '../components/business/BusinessCard';
-import BusinessMap from '../components/business/BusinessMap';
 
 const Home = () => {
   const { user, isAuthenticated } = useAuth();
@@ -14,22 +14,21 @@ const Home = () => {
   const [businesses, setBusinesses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeSearch, setActiveSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [favorites, setFavorites] = useState([]);
-  const [viewMode, setViewMode] = useState('list');
+  const [stats, setStats] = useState({ businesses: 0, users: 0, neighborhoods: 0 });
+
+  const formatCount = (n) => new Intl.NumberFormat('es').format(n ?? 0);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
 
     const [catRes, bizRes] = await Promise.all([
       businessService.getCategories(),
-      businessService.getBusinesses({
-        ...(selectedCategoryId ? { categoryId: selectedCategoryId } : {}),
-        ...(activeSearch ? { searchQuery: activeSearch } : {})
-      })
+      businessService.getBusinesses(
+        selectedCategoryId ? { categoryId: selectedCategoryId } : {}
+      )
     ]);
 
     if (catRes.error) {
@@ -47,8 +46,11 @@ const Home = () => {
       if (favoriteData) setFavorites(favoriteData);
     }
 
+    const { data: statsData } = await statsService.getPublicStats();
+    if (statsData) setStats(statsData);
+
     setLoading(false);
-  }, [isAuthenticated, user, selectedCategoryId, activeSearch]);
+  }, [isAuthenticated, user, selectedCategoryId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -99,7 +101,35 @@ const Home = () => {
                 Encuentra pequeños negocios y emprendimientos de tu comunidad. Descubre qué tienen para ofrecerte.
               </p>
 
-
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 max-w-3xl">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-primary/10 text-primary shrink-0">
+                    <Building2 size={26} aria-hidden />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-dark tabular-nums">{formatCount(stats.businesses)}</p>
+                    <p className="text-sm text-gray-600">Negocios conectados</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-secondary/20 text-green-800 shrink-0">
+                    <Users size={26} aria-hidden />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-dark tabular-nums">{formatCount(stats.users)}</p>
+                    <p className="text-sm text-gray-600">Usuarios conectados</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-violet-100 text-violet-700 shrink-0">
+                    <MapPinned size={26} aria-hidden />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-dark tabular-nums">{formatCount(stats.neighborhoods)}</p>
+                    <p className="text-sm text-gray-600">Barrios conectados</p>
+                  </div>
+                </div>
+              </div>
 
               <button
                 onClick={() => document.getElementById('directorio').scrollIntoView({ behavior: 'smooth' })}
@@ -113,69 +143,13 @@ const Home = () => {
           <section id="directorio" className="px-6 pb-12 max-w-6xl mx-auto w-full">
             <div className="border-t border-primary/20 pt-4 flex justify-between items-center mb-4 flex-wrap gap-3">
               <h2 className="text-2xl font-bold text-dark">Emprendimientos Destacados</h2>
-              <div className="flex items-center gap-2">
-                <div className="bg-white rounded-lg p-1 flex border border-gray-200 shadow-sm">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-800'
-                    }`}
-                  >
-                    <List size={16} /> Lista
-                  </button>
-                  <button
-                    onClick={() => setViewMode('map')}
-                    className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      viewMode === 'map' ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-800'
-                    }`}
-                  >
-                    <Map size={16} /> Mapa
-                  </button>
-                </div>
-                <button
-                  onClick={fetchData}
-                  className="text-primary border border-primary/50 hover:bg-primary/10 px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
-                >
-                  Actualizar
-                </button>
-              </div>
-            </div>
-
-            <form 
-              onSubmit={(e) => { e.preventDefault(); setActiveSearch(searchQuery); }}
-              className="mb-6 flex gap-2"
-            >
-              <div className="relative flex-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search size={20} className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Buscar negocios por nombre o descripción..."
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-white/90 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all shadow-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setActiveSearch('');
-                    }}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
               <button
-                type="submit"
-                className="bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                onClick={fetchData}
+                className="text-primary border border-primary/50 hover:bg-primary/10 px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
               >
-                Buscar
+                Actualizar
               </button>
-            </form>
+            </div>
 
             <div className="mb-6 rounded-xl border border-gray-200 bg-white/90 p-4 shadow-sm">
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
@@ -231,23 +205,19 @@ const Home = () => {
                 ))}
               </div>
             ) : businesses.length > 0 ? (
-              viewMode === 'list' ? (
-                <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
-                  {businesses.map((business) => (
-                    <div key={business.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
-                      <BusinessCard
-                        business={business}
-                        onClick={handleCardClick}
-                        isSelected={selectedBusiness?.id === business.id}
-                        isFavorite={favorites.includes(business.id)}
-                        onToggleFavorite={handleToggleFavorite}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <BusinessMap businesses={businesses} onBusinessClick={handleCardClick} />
-              )
+              <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
+                {businesses.map((business) => (
+                  <div key={business.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
+                    <BusinessCard
+                      business={business}
+                      onClick={handleCardClick}
+                      isSelected={selectedBusiness?.id === business.id}
+                      isFavorite={favorites.includes(business.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                    />
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="text-center py-12 bg-white/70 rounded-xl border border-dashed border-gray-300">
                 <Store className="mx-auto text-gray-400 mb-4" size={48} />
@@ -274,7 +244,7 @@ const Home = () => {
         </div>
 
         <div className={`
-          fixed top-[73px] bottom-0 right-0 w-full md:w-[350px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl transform transition-transform duration-300 ease-in-out z-40 overflow-y-auto flex flex-col
+          fixed inset-y-[73px] right-0 w-full md:w-[350px] lg:w-[400px] bg-white border-l border-gray-200 shadow-2xl transform transition-transform duration-300 ease-in-out z-40 overflow-y-auto flex flex-col
           ${selectedBusiness ? 'translate-x-0' : 'translate-x-full'}
         `}>
           {selectedBusiness && (
@@ -294,14 +264,6 @@ const Home = () => {
               <div className="p-6 flex-1 flex flex-col relative -mt-8">
                 <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 relative z-10 mb-6 flex flex-col gap-2">
                   <h2 className="text-2xl font-bold text-dark">{selectedBusiness.name}</h2>
-                  
-                  {selectedBusiness.rating > 0 && (
-                    <div className="flex items-center gap-1 text-amber-500 text-sm font-medium">
-                      <Star size={14} fill="currentColor" />
-                      <span>{Number(selectedBusiness.rating).toFixed(1)}</span>
-                      <span className="text-gray-400 font-normal">({selectedBusiness.reviews_count} reseñas)</span>
-                    </div>
-                  )}
 
                   {selectedBusiness.categories && (
                     <span className="text-sm font-medium text-gray-500">

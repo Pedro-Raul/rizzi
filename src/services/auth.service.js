@@ -43,6 +43,24 @@ export const authService = {
 
     return { data, error };
   },
+
+  async listUsers() {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, full_name, role, created_at')
+      .order('full_name', { ascending: true, nullsFirst: false });
+
+    return { data, error };
+  },
+
+  async updateUserRole(userId, role) {
+    const { data, error } = await supabase.rpc('admin_update_user_role', {
+      target_user_id: userId,
+      new_role: role
+    });
+
+    return { data, error };
+  },
   
   onAuthStateChange(callback) {
     return supabase.auth.onAuthStateChange(callback);

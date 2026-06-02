@@ -9,8 +9,7 @@ import { Store, Plus, X, Image as ImageIcon, Pencil, Trash2, Flag } from 'lucide
 import BusinessCard from '../components/business/BusinessCard';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import AdminReportsPanel from '../components/admin/AdminReportsPanel';
-import LocationPicker from '../components/business/LocationPicker';
-import OrdersPanel from '../components/business/OrdersPanel';
+import UserRoleManager from '../components/admin/UserRoleManager';
 import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 
 const emptyBusinessForm = {
@@ -23,15 +22,12 @@ const emptyBusinessForm = {
   instagram_url: '',
   facebook_url: '',
   tiktok_url: '',
-  whatsapp_url: '',
-  theme_color: '#8B7DFA',
-  latitude: null,
-  longitude: null,
-  delivery_points: ''
+  website_url: '',
+  whatsapp_url: ''
 };
 
 const Dashboard = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
   const [businesses, setBusinesses] = useState([]);
@@ -52,25 +48,32 @@ const Dashboard = () => {
     if (!user) return;
 
     setLoading(true);
-    const [bizRes, catRes] = await Promise.all([
+    try {
+      const [bizRes, catRes] = await Promise.all([
       isAdmin ? businessService.getBusinesses() : businessService.getUserBusinesses(user.id),
       businessService.getCategories()
     ]);
 
-    if (bizRes.data) setBusinesses(bizRes.data);
-    setCategories(catRes.data || []);
+    setBusinesses(Array.isArray(bizRes.data) ? bizRes.data : []);
+    setCategories(Array.isArray(catRes.data) ? catRes.data : []);
     if (catRes.error) {
       console.error('Error al cargar categorías:', catRes.error);
     }
 
     if (isAdmin) {
       const { data: reportData } = await reportService.listReportsForAdmin();
-      setReports(reportData || []);
+      setReports(Array.isArray(reportData) ? reportData : []);
     } else {
       setReports([]);
     }
 
-    setLoading(false);
+    } catch (loadError) {
+      console.error('Error al cargar el dashboard:', loadError);
+      setBusinesses([]);
+      setReports([]);
+    } finally {
+      setLoading(false);
+    }
   }, [user, isAdmin]);
 
   useEffect(() => {
@@ -105,11 +108,7 @@ const Dashboard = () => {
       facebook_url: business.facebook_url || '',
       tiktok_url: business.tiktok_url || '',
       website_url: business.website_url || '',
-      whatsapp_url: business.whatsapp_url || '',
-      theme_color: business.theme_color || '#8B7DFA',
-      latitude: business.latitude || null,
-      longitude: business.longitude || null,
-      delivery_points: business.delivery_points ? business.delivery_points.join(', ') : ''
+      whatsapp_url: business.whatsapp_url || ''
     });
     setLogoFile(null);
     setBannerFile(null);
@@ -199,10 +198,7 @@ const Dashboard = () => {
       category_id: formData.category_id || null,
       neighborhood: formData.neighborhood?.trim() || null,
       logo_url,
-      banner_url,
-      delivery_points: formData.delivery_points 
-        ? formData.delivery_points.split(',').map(s => s.trim()).filter(Boolean) 
-        : []
+      banner_url
     };
 
     const { error } = editingBusiness
@@ -256,6 +252,15 @@ const Dashboard = () => {
             Cerrar sesión
           </button>
         </div>
+
+        {isAdmin && (
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+            <UserRoleManager
+              currentUserId={user.id}
+              onCurrentUserRoleChange={() => refreshProfile(user.id)}
+            />
+          </div>
+        )}
 
         {isAdmin && (
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -383,43 +388,6 @@ const Dashboard = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Puntos de Encuentro (Pick-up)</label>
-                  <input
-                    name="delivery_points"
-                    value={formData.delivery_points}
-                    onChange={handleChange}
-                    placeholder="Ej. Estación Calle 45, Entrada Principal (separados por coma)"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Opciones de entrega para los clientes al hacer un pedido (separadas por coma).</p>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-5">
-                  <LocationPicker
-                    latitude={formData.latitude}
-                    longitude={formData.longitude}
-                    onChange={({ latitude, longitude }) => 
-                      setFormData(prev => ({ ...prev, latitude, longitude }))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Color de la marca</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      name="theme_color"
-                      value={formData.theme_color}
-                      onChange={handleChange}
-                      className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-                    />
-                    <span className="text-sm text-gray-500 uppercase">{formData.theme_color}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Personaliza el color de los botones y detalles en el perfil de tu negocio.</p>
-                </div>
-
-                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                   <textarea name="description" value={formData.description} onChange={handleChange} rows="3" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"></textarea>
                 </div>
@@ -487,13 +455,6 @@ const Dashboard = () => {
                           <Trash2 size={16} />
                           Eliminar
                         </button>
-                      </div>
-                      <div className="mt-4 border-t border-gray-200 pt-4">
-                        <h4 className="font-bold text-dark mb-3 flex items-center gap-2">
-                          <Package size={18} className="text-primary" />
-                          Pedidos Entrantes
-                        </h4>
-                        <OrdersPanel businessId={business.id} />
                       </div>
                     </div>
                   ))}

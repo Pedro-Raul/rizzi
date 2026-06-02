@@ -74,7 +74,6 @@ CREATE TABLE public.businesses (
     address TEXT,
     neighborhood TEXT,
     phone TEXT,
-    theme_color TEXT,
     is_approved BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

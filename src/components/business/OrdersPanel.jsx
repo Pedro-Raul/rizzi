@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { orderService } from '../../services/order.service';
 import { Package, Clock, CheckCircle, XCircle } from 'lucide-react';
 
@@ -7,16 +7,17 @@ const OrdersPanel = ({ businessId }) => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     const { data } = await orderService.getBusinessOrders(businessId);
-    if (data) setOrders(data);
+    setOrders(Array.isArray(data) ? data : []);
     setLoading(false);
-  };
+  }, [businessId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (businessId) fetchOrders();
-  }, [businessId]);
+  }, [businessId, fetchOrders]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdating(true);
@@ -47,7 +48,9 @@ const OrdersPanel = ({ businessId }) => {
     return <div className="p-8 text-center text-gray-500">Cargando pedidos...</div>;
   }
 
-  if (orders.length === 0) {
+  const orderList = Array.isArray(orders) ? orders : [];
+
+  if (orderList.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
         <Package className="mx-auto text-gray-400 mb-4" size={48} />
@@ -59,7 +62,7 @@ const OrdersPanel = ({ businessId }) => {
 
   return (
     <div className="space-y-4">
-      {orders.map(order => (
+      {orderList.map(order => (
         <div key={order.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
             <div>
@@ -81,7 +84,7 @@ const OrdersPanel = ({ businessId }) => {
           <div className="bg-gray-50 rounded-lg p-3 mb-4">
             <h5 className="text-sm font-bold text-gray-700 mb-2">Artículos:</h5>
             <ul className="space-y-1">
-              {order.order_items.map(item => (
+              {(Array.isArray(order.order_items) ? order.order_items : []).map(item => (
                 <li key={item.id} className="text-sm flex justify-between">
                   <span>{item.quantity}x {item.product_name}</span>
                   <span className="text-gray-600">${Number(item.price * item.quantity).toLocaleString('es-ES')}</span>

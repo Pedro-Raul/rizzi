@@ -7,6 +7,7 @@ import { X, MapPin } from 'lucide-react';
 const CheckoutModal = ({ open, onClose, businessId, deliveryPoints = [], onOrderSuccess }) => {
   const { items, total, clearCart } = useCart();
   const { user } = useAuth();
+  const points = Array.isArray(deliveryPoints) ? deliveryPoints : [];
   
   const [selectedPoint, setSelectedPoint] = useState('');
   const [notes, setNotes] = useState('');
@@ -21,7 +22,7 @@ const CheckoutModal = ({ open, onClose, businessId, deliveryPoints = [], onOrder
       return;
     }
 
-    if (!selectedPoint && deliveryPoints.length > 0) {
+    if (!selectedPoint && points.length > 0) {
       alert("Selecciona un punto de encuentro.");
       return;
     }
@@ -69,7 +70,7 @@ const CheckoutModal = ({ open, onClose, businessId, deliveryPoints = [], onOrder
               Punto de Encuentro
             </label>
             
-            {deliveryPoints.length > 0 ? (
+            {points.length > 0 ? (
               <select
                 required
                 value={selectedPoint}
@@ -77,7 +78,7 @@ const CheckoutModal = ({ open, onClose, businessId, deliveryPoints = [], onOrder
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
               >
                 <option value="">Selecciona una opción...</option>
-                {deliveryPoints.map((point, idx) => (
+                {points.map((point, idx) => (
                   <option key={idx} value={point}>{point}</option>
                 ))}
               </select>
@@ -92,7 +93,7 @@ const CheckoutModal = ({ open, onClose, businessId, deliveryPoints = [], onOrder
               />
             )}
             <p className="text-xs text-gray-500 mt-2">
-              {deliveryPoints.length > 0 
+              {points.length > 0 
                 ? 'El vendedor ha predefinido estos puntos para la entrega.' 
                 : 'Indica dónde te encontrarás con el vendedor.'}
             </p>

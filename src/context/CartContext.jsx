@@ -2,14 +2,21 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => {
   return useContext(CartContext);
 };
 
 export const CartProvider = ({ children }) => {
+  const normalizeCartItems = (value) => (Array.isArray(value) ? value : []);
   const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem('rizzi_cart');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('rizzi_cart');
+      return saved ? normalizeCartItems(JSON.parse(saved)) : [];
+    } catch {
+      localStorage.removeItem('rizzi_cart');
+      return [];
+    }
   });
   const [businessId, setBusinessId] = useState(() => {
     const saved = localStorage.getItem('rizzi_cart_business');
@@ -89,13 +96,14 @@ export const CartProvider = ({ children }) => {
     setBusinessId(null);
   };
 
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const itemCount = items.reduce((count, item) => count + item.quantity, 0);
+  const cartItems = normalizeCartItems(items);
+  const total = cartItems.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0);
+  const itemCount = cartItems.reduce((count, item) => count + Number(item.quantity || 0), 0);
 
   return (
     <CartContext.Provider
       value={{
-        items,
+        items: cartItems,
         businessId,
         addToCart,
         removeFromCart,

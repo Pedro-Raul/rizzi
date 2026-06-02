@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { authService } from '../services/auth.service';
 
 const AuthContext = createContext({});
@@ -8,14 +8,24 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshProfile = useCallback(async (userId) => {
+    if (!userId) {
+      setProfile(null);
+      return null;
+    }
+
+    const { data } = await authService.getUserProfile(userId);
+    setProfile(data || null);
+    return data || null;
+  }, []);
+
   useEffect(() => {
     const applySession = async (session) => {
       const currentUser = session?.user || null;
       setUser(currentUser);
 
       if (currentUser) {
-        const { data } = await authService.getUserProfile(currentUser.id);
-        setProfile(data || null);
+        await refreshProfile(currentUser.id);
       } else {
         setProfile(null);
       }
@@ -37,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [refreshProfile]);
 
   const value = {
     user,
@@ -45,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAuthenticated: !!user,
     isAdmin: profile?.role === 'admin',
+    refreshProfile
   };
 
   return (

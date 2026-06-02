@@ -17,6 +17,7 @@ const reasonLabels = {
 };
 
 const AdminReportsPanel = ({ reports, onRefresh }) => {
+  const reportList = Array.isArray(reports) ? reports : [];
   const [local, setLocal] = useState({});
   const [savingId, setSavingId] = useState(null);
 
@@ -27,7 +28,7 @@ const AdminReportsPanel = ({ reports, onRefresh }) => {
 
   const setDraft = (id, patch) => {
     setLocal((prev) => {
-      const report = reports.find((r) => r.id === id);
+      const report = reportList.find((r) => r.id === id);
       if (!report) return prev;
       const base = {
         status: prev[id]?.status ?? report.status,
@@ -57,7 +58,7 @@ const AdminReportsPanel = ({ reports, onRefresh }) => {
     onRefresh();
   };
 
-  if (!reports.length) {
+  if (!reportList.length) {
     return (
       <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 p-8 text-center text-gray-500">
         <Flag className="mx-auto mb-3 text-gray-300" size={40} />
@@ -69,7 +70,7 @@ const AdminReportsPanel = ({ reports, onRefresh }) => {
 
   return (
     <div className="space-y-4">
-      {reports.map((report) => {
+      {reportList.map((report) => {
         const draft = getDraft(report);
         const business = report.businesses;
         const reporter = report.users;
