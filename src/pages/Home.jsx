@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Store, Heart, X, ChevronRight, Tag, Building2, Users, MapPinned } from 'lucide-react';
+import { MapPin, Store, Heart, X, ChevronRight, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { businessService } from '../services/business.service';
 import { favoriteService } from '../services/favorite.service';
-import { statsService } from '../services/stats.service';
 import BusinessCard from '../components/business/BusinessCard';
 
 const Home = () => {
@@ -17,10 +16,6 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [favorites, setFavorites] = useState([]);
-  const [stats, setStats] = useState({ businesses: 0, users: 0, neighborhoods: 0 });
-
-  const formatCount = (n) => new Intl.NumberFormat('es').format(n ?? 0);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
 
@@ -45,9 +40,6 @@ const Home = () => {
       const { data: favoriteData } = await favoriteService.getUserFavorites(user.id);
       if (favoriteData) setFavorites(favoriteData);
     }
-
-    const { data: statsData } = await statsService.getPublicStats();
-    if (statsData) setStats(statsData);
 
     setLoading(false);
   }, [isAuthenticated, user, selectedCategoryId]);
@@ -100,36 +92,6 @@ const Home = () => {
               <p className="text-lg text-gray-600 mb-8 max-w-xl">
                 Encuentra pequeños negocios y emprendimientos de tu comunidad. Descubre qué tienen para ofrecerte.
               </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 max-w-3xl">
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10 text-primary shrink-0">
-                    <Building2 size={26} aria-hidden />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-dark tabular-nums">{formatCount(stats.businesses)}</p>
-                    <p className="text-sm text-gray-600">Negocios conectados</p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-secondary/20 text-green-800 shrink-0">
-                    <Users size={26} aria-hidden />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-dark tabular-nums">{formatCount(stats.users)}</p>
-                    <p className="text-sm text-gray-600">Usuarios conectados</p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-violet-100 text-violet-700 shrink-0">
-                    <MapPinned size={26} aria-hidden />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-dark tabular-nums">{formatCount(stats.neighborhoods)}</p>
-                    <p className="text-sm text-gray-600">Barrios conectados</p>
-                  </div>
-                </div>
-              </div>
 
               <button
                 onClick={() => document.getElementById('directorio').scrollIntoView({ behavior: 'smooth' })}
