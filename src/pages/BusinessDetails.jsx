@@ -42,7 +42,7 @@ const socialLinks = [
   { key: 'whatsapp_url', label: 'WhatsApp', icon: MessageCircle }
 ];
 
-const ProductSection = ({ title, products, isOwner, onEdit, onDelete }) => (
+const ProductSection = ({ title, products, isOwner, onEdit, onDelete, onToggleActive }) => (
   <section className="space-y-4">
     <div className="bg-primary text-white font-bold text-center py-2 rounded-lg">
       {title}
@@ -56,6 +56,7 @@ const ProductSection = ({ title, products, isOwner, onEdit, onDelete }) => (
             isOwner={isOwner}
             onEdit={onEdit}
             onDelete={onDelete}
+            onToggleActive={onToggleActive}
           />
         ))}
       </div>
@@ -107,13 +108,13 @@ const BusinessDetails = () => {
 
     setBusiness(businessData);
 
-    const { data: productData } = await productService.getBusinessProducts(id);
+    const { data: productData } = await productService.getBusinessProducts(id, canManage);
     if (productData) {
       setProducts(productData);
     }
 
     setLoading(false);
-  }, [id]);
+  }, [id, canManage]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -158,8 +159,29 @@ const BusinessDetails = () => {
   };
 
   const refreshProducts = async () => {
-    const { data } = await productService.getBusinessProducts(id);
+    const { data } = await productService.getBusinessProducts(id, canManage);
     if (data) setProducts(data);
+  };
+
+  const handleToggleProductActive = async (product) => {
+    const nextActive = !product.is_active;
+
+    setProducts((current) =>
+      current.map((item) =>
+        item.id === product.id ? { ...item, is_active: nextActive } : item
+      )
+    );
+
+    const { error: updateError } = await productService.updateProductStatus(product.id, nextActive);
+
+    if (updateError) {
+      setProducts((current) =>
+        current.map((item) =>
+          item.id === product.id ? { ...item, is_active: product.is_active } : item
+        )
+      );
+      alert('Error al cambiar la disponibilidad: ' + updateError.message);
+    }
   };
 
   const handleSaveProduct = async (event) => {
@@ -445,6 +467,7 @@ const BusinessDetails = () => {
                   isOwner={canManage}
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
+                  onToggleActive={handleToggleProductActive}
                 />
                 <ProductSection
                   title="Destacados"
@@ -452,6 +475,7 @@ const BusinessDetails = () => {
                   isOwner={canManage}
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
+                  onToggleActive={handleToggleProductActive}
                 />
               </>
             ) : (

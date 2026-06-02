@@ -53,6 +53,16 @@ export const productService = {
     return { data, error };
   },
 
+  async updateProductStatus(productId, isActive) {
+    const { data, error } = await supabase
+      .from('products')
+      .update({ is_active: isActive })
+      .eq('id', productId)
+      .select();
+
+    return { data, error };
+  },
+
   // Eliminar (o desactivar) un producto
   async deleteProduct(productId) {
     // Para el MVP los eliminamos físicamente
