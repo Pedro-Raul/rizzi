@@ -6,7 +6,7 @@ import { ShoppingCart } from 'lucide-react';
 const navLinks = [
   { to: '/', label: 'Inicio' },
   { to: '/favorites', label: 'Favoritos' },
-  { to: '/about', label: 'Quiénes somos' }
+  { to: '/about', label: 'Quienes somos' }
 ];
 
 const Navbar = ({ onCartOpen }) => {
@@ -34,9 +34,14 @@ const Navbar = ({ onCartOpen }) => {
               {link.label}
             </Link>
           ))}
+          {isAuthenticated && (
+            <Link to="/orders" className={getLinkClass('/orders')}>
+              Mis pedidos
+            </Link>
+          )}
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 md:gap-4">
         <button
           type="button"
           onClick={onCartOpen}
@@ -52,14 +57,24 @@ const Navbar = ({ onCartOpen }) => {
           )}
         </button>
         {isAuthenticated ? (
-          <Link
-            to="/dashboard"
-            className={pathname.startsWith('/dashboard')
-              ? 'text-primary bg-primary/5 px-4 py-2 rounded-md font-medium transition-all'
-              : 'text-primary hover:bg-primary/5 px-4 py-2 rounded-md font-medium transition-all'}
-          >
-            Mi Panel
-          </Link>
+          <>
+            <Link
+              to="/orders"
+              className={pathname.startsWith('/orders')
+                ? 'text-primary bg-primary/5 px-3 py-2 rounded-md font-medium transition-all md:hidden'
+                : 'text-gray-600 hover:text-primary hover:bg-primary/5 px-3 py-2 rounded-md font-medium transition-all md:hidden'}
+            >
+              Pedidos
+            </Link>
+            <Link
+              to="/dashboard"
+              className={pathname.startsWith('/dashboard')
+                ? 'text-primary bg-primary/5 px-4 py-2 rounded-md font-medium transition-all'
+                : 'text-primary hover:bg-primary/5 px-4 py-2 rounded-md font-medium transition-all'}
+            >
+              Mi Panel
+            </Link>
+          </>
         ) : (
           <>
             <Link
@@ -68,7 +83,7 @@ const Navbar = ({ onCartOpen }) => {
                 ? 'text-primary font-medium transition-colors hidden sm:block'
                 : 'text-gray-600 hover:text-primary font-medium transition-colors hidden sm:block'}
             >
-              Iniciar sesión
+              Iniciar sesion
             </Link>
             <Link
               to="/register"

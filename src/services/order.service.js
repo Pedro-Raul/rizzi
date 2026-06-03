@@ -40,10 +40,25 @@ export const orderService = {
       .from('orders')
       .select(`
         *,
+        businesses ( id, name ),
         users ( full_name, email ),
         order_items ( id, product_id, product_name, quantity, price )
       `)
       .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
+
+    return { data, error };
+  },
+
+  async getUserOrders(userId) {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        businesses ( id, name, logo_url, phone, whatsapp_url ),
+        order_items ( id, product_id, product_name, quantity, price )
+      `)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     return { data, error };

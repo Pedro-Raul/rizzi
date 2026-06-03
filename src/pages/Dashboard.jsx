@@ -294,6 +294,19 @@ const Dashboard = () => {
           </div>
         )}
 
+        {!loading && businesses.length > 0 && (
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+            <h2 className="text-2xl font-bold text-dark flex items-center gap-2 mb-2">
+              <Package className="text-primary" />
+              Pedidos entrantes
+            </h2>
+            <p className="text-gray-600 text-sm mb-6">
+              Gestiona en un solo lugar los pedidos de todos tus negocios.
+            </p>
+            <OrdersPanel businesses={businesses} />
+          </div>
+        )}
+
         <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-dark flex items-center gap-2">
@@ -505,13 +518,6 @@ const Dashboard = () => {
                           <Trash2 size={16} />
                           Eliminar
                         </button>
-                      </div>
-                      <div className="mt-4 border-t border-gray-200 pt-4">
-                        <h4 className="font-bold text-dark mb-3 flex items-center gap-2">
-                          <Package size={18} className="text-primary" />
-                          Pedidos Entrantes
-                        </h4>
-                        <OrdersPanel businessId={business.id} />
                       </div>
                     </div>
                   ))}

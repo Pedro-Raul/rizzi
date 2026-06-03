@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import BusinessDetails from './pages/BusinessDetails';
 import Favorites from './pages/Favorites';
+import MyOrders from './pages/MyOrders';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/orders" element={<MyOrders />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/business/:id" element={<BusinessDetails />} />
               {/* Rutas protegidas se agregarán aquí */}
