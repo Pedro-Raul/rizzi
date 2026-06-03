@@ -41,7 +41,7 @@ export const orderService = {
       .select(`
         *,
         businesses ( id, name ),
-        users ( full_name, email ),
+        users ( full_name ),
         order_items ( id, product_id, product_name, quantity, price )
       `)
       .eq('business_id', businessId)

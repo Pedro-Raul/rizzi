@@ -3,12 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { ShoppingCart } from 'lucide-react';
 
-const navLinks = [
-  { to: '/', label: 'Inicio' },
-  { to: '/favorites', label: 'Favoritos' },
-  { to: '/about', label: 'Quienes somos' }
-];
-
 const Navbar = ({ onCartOpen }) => {
   const { isAuthenticated } = useAuth();
   const { itemCount } = useCart();
@@ -29,16 +23,20 @@ const Navbar = ({ onCartOpen }) => {
           <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
         </Link>
         <div className="hidden md:flex gap-6 font-medium">
-          {navLinks.map((link) => (
-            <Link key={link.to} to={link.to} className={getLinkClass(link.to)}>
-              {link.label}
-            </Link>
-          ))}
+          <Link to="/" className={getLinkClass('/')}>
+            Inicio
+          </Link>
+          <Link to="/favorites" className={getLinkClass('/favorites')}>
+            Favoritos
+          </Link>
           {isAuthenticated && (
             <Link to="/orders" className={getLinkClass('/orders')}>
               Mis pedidos
             </Link>
           )}
+          <Link to="/about" className={getLinkClass('/about')}>
+            Quienes somos
+          </Link>
         </div>
       </div>
       <div className="flex items-center gap-3 md:gap-4">
