@@ -55,7 +55,7 @@ export const orderService = {
       .from('orders')
       .select(`
         *,
-        businesses ( id, name, logo_url, phone, whatsapp_url ),
+        businesses ( id, name, logo_url, phone ),
         order_items ( id, product_id, product_name, quantity, price )
       `)
       .eq('user_id', userId)
