@@ -8,6 +8,10 @@ import { reportService } from '../services/report.service';
 import ProductCard from '../components/business/ProductCard';
 import ReportBusinessModal from '../components/business/ReportBusinessModal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ReviewSection from '../components/business/ReviewSection';
+import CartDrawer from '../components/cart/CartDrawer';
+import CheckoutModal from '../components/cart/CheckoutModal';
+import { useCart } from '../context/CartContext';
 import { containsBlockedLanguage, MODERATION_MESSAGE } from '../utils/moderation';
 import {
   Store,
@@ -25,7 +29,9 @@ import {
   MessageCircle,
   Trash2,
   Flag,
-  MapPinned
+  MapPinned,
+  Star,
+  ShoppingCart
 } from 'lucide-react';
 
 const emptyProductForm = {
@@ -42,9 +48,9 @@ const socialLinks = [
   { key: 'whatsapp_url', label: 'WhatsApp', icon: MessageCircle }
 ];
 
-const ProductSection = ({ title, products, isOwner, onEdit, onDelete, onToggleActive }) => (
+const ProductSection = ({ title, products, isOwner, onEdit, onDelete, onToggleActive, themeColor }) => (
   <section className="space-y-4">
-    <div className="bg-primary text-white font-bold text-center py-2 rounded-lg">
+    <div className="text-white font-bold text-center py-2 rounded-lg" style={{ backgroundColor: themeColor || '#8B7DFA' }}>
       {title}
     </div>
     {products.length > 0 ? (
@@ -86,6 +92,10 @@ const BusinessDetails = () => {
   const [deleting, setDeleting] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportSaving, setReportSaving] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  const { itemCount } = useCart();
 
   const isOwner = user && business && user.id === business.owner_id;
   const canManage = isOwner || isAdmin;
@@ -108,13 +118,14 @@ const BusinessDetails = () => {
 
     setBusiness(businessData);
 
-    const { data: productData } = await productService.getBusinessProducts(id, canManage);
+    const isBusinessOwner = user && user.id === businessData.owner_id;
+    const { data: productData } = await productService.getBusinessProducts(id, isBusinessOwner || isAdmin);
     if (productData) {
       setProducts(productData);
     }
 
     setLoading(false);
-  }, [id, canManage]);
+  }, [id, user, isAdmin]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -159,7 +170,8 @@ const BusinessDetails = () => {
   };
 
   const refreshProducts = async () => {
-    const { data } = await productService.getBusinessProducts(id, canManage);
+    const isBusinessOwner = user && business && user.id === business.owner_id;
+    const { data } = await productService.getBusinessProducts(id, isBusinessOwner || isAdmin);
     if (data) setProducts(data);
   };
 
@@ -328,7 +340,10 @@ const BusinessDetails = () => {
 
   return (
     <div className="flex-1 bg-[#F3F1FB] px-4 md:px-8 py-6 md:py-10">
-      <div className="-mx-4 -mt-6 md:-mx-8 md:-mt-10 h-44 md:h-60 bg-primary overflow-hidden">
+      <div 
+        className="-mx-4 -mt-6 md:-mx-8 md:-mt-10 h-44 md:h-60 overflow-hidden"
+        style={{ backgroundColor: business.theme_color || '#8B7DFA' }}
+      >
         {business.banner_url && (
           <img
             src={business.banner_url}
@@ -360,6 +375,15 @@ const BusinessDetails = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-dark">{business.name}</h1>
+                  
+                  {business.rating > 0 && (
+                    <div className="flex items-center gap-1 text-amber-500 font-medium mt-1 mb-1">
+                      <Star size={16} fill="currentColor" />
+                      <span>{Number(business.rating).toFixed(1)}</span>
+                      <span className="text-gray-400 font-normal text-sm">({business.reviews_count} reseñas)</span>
+                    </div>
+                  )}
+
                   <p className="text-gray-500 mt-1">
                     {[business.categories?.name, business.neighborhood, business.address].filter(Boolean).join(' · ') || 'Negocio local'}
                   </p>
@@ -395,7 +419,8 @@ const BusinessDetails = () => {
             {canManage && !showForm && (
               <button
                 onClick={openCreateProductForm}
-                className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-90 flex items-center gap-2 transition-all"
+                className="text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-90 flex items-center gap-2 transition-all"
+                style={{ backgroundColor: business.theme_color || '#8B7DFA' }}
               >
                 <Plus size={18} />
                 Añadir Producto
@@ -468,6 +493,7 @@ const BusinessDetails = () => {
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
                   onToggleActive={handleToggleProductActive}
+                  themeColor={business.theme_color}
                 />
                 <ProductSection
                   title="Destacados"
@@ -476,6 +502,7 @@ const BusinessDetails = () => {
                   onEdit={openEditProductForm}
                   onDelete={handleDeleteProduct}
                   onToggleActive={handleToggleProductActive}
+                  themeColor={business.theme_color}
                 />
               </>
             ) : (
@@ -489,23 +516,25 @@ const BusinessDetails = () => {
                 </p>
               </div>
             )}
+
+            <ReviewSection businessId={business.id} onReviewAdded={loadData} />
           </main>
 
           <aside className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:sticky lg:top-28">
             <h2 className="text-xl font-bold text-dark mb-5">Información del local</h2>
             <div className="space-y-4 text-sm text-gray-600">
               <div className="flex gap-3">
-                <MapPin size={18} className="text-primary shrink-0" />
+                <MapPin size={18} className="shrink-0" style={{ color: business.theme_color || '#8B7DFA' }} />
                 <span>{business.address || 'Ubicación no disponible'}</span>
               </div>
               {business.neighborhood?.trim() && (
                 <div className="flex gap-3">
-                  <MapPinned size={18} className="text-primary shrink-0" />
+                  <MapPinned size={18} className="shrink-0" style={{ color: business.theme_color || '#8B7DFA' }} />
                   <span>{business.neighborhood.trim()}</span>
                 </div>
               )}
               <div className="flex gap-3">
-                <Phone size={18} className="text-primary shrink-0" />
+                <Phone size={18} className="shrink-0" style={{ color: business.theme_color || '#8B7DFA' }} />
                 <span>{business.phone || 'Teléfono no disponible'}</span>
               </div>
             </div>
@@ -523,7 +552,11 @@ const BusinessDetails = () => {
                         href={business[link.key]}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium hover:bg-primary/15 transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                        style={{ 
+                          color: business.theme_color || '#8B7DFA',
+                          backgroundColor: `${business.theme_color || '#8B7DFA'}1A`
+                        }}
                       >
                         <Icon size={16} />
                         {link.label}
@@ -587,6 +620,40 @@ const BusinessDetails = () => {
         onClose={() => setReportModalOpen(false)}
         onSubmit={handleSubmitReport}
       />
+
+      <CartDrawer 
+        open={cartDrawerOpen} 
+        onClose={() => setCartDrawerOpen(false)} 
+        onCheckout={() => {
+          setCartDrawerOpen(false);
+          setCheckoutModalOpen(true);
+        }}
+      />
+
+      <CheckoutModal 
+        open={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        businessId={business?.id}
+        deliveryPoints={business?.delivery_points || []}
+        onOrderSuccess={() => {
+          alert('¡Pedido realizado con éxito!');
+        }}
+      />
+
+      {!isOwner && itemCount > 0 && (
+        <button
+          onClick={() => setCartDrawerOpen(true)}
+          className="fixed bottom-6 right-6 hover:bg-opacity-90 text-white p-4 rounded-full shadow-2xl transition-all z-30 flex items-center justify-center group animate-bounce"
+          style={{ backgroundColor: business?.theme_color || '#8B7DFA' }}
+        >
+          <div className="relative">
+            <ShoppingCart size={28} />
+            <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white">
+              {itemCount}
+            </span>
+          </div>
+        </button>
+      )}
     </div>
   );
 };

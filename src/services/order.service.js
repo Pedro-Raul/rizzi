@@ -49,6 +49,39 @@ export const orderService = {
     return { data, error };
   },
 
+  async getOrderCountsByBusinessIds(businessIds) {
+    if (!Array.isArray(businessIds) || businessIds.length === 0) {
+      return { data: {}, error: null };
+    }
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('business_id, status')
+      .in('business_id', businessIds);
+
+    if (error) {
+      return { data: {}, error };
+    }
+
+    const counts = (Array.isArray(data) ? data : []).reduce((acc, order) => {
+      const current = acc[order.business_id] || { total: 0, pending: 0, active: 0 };
+      current.total += 1;
+
+      if (order.status === 'pending') {
+        current.pending += 1;
+      }
+
+      if (order.status === 'pending' || order.status === 'in_preparation') {
+        current.active += 1;
+      }
+
+      acc[order.business_id] = current;
+      return acc;
+    }, {});
+
+    return { data: counts, error: null };
+  },
+
   // Actualizar el estado de un pedido (pendiente, en preparación, entregado)
   async updateOrderStatus(orderId, newStatus) {
     const { data, error } = await supabase
