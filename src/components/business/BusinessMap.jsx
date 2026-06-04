@@ -19,6 +19,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const MapUpdater = ({ businesses }) => {
   const map = useMap();
   useEffect(() => {
+    map.invalidateSize();
     if (businesses.length > 0) {
       const markers = businesses.filter(b => b.latitude && b.longitude);
       if (markers.length > 0) {
