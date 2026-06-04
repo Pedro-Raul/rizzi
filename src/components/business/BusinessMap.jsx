@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -57,6 +57,14 @@ const BusinessMap = ({ businesses, onBusinessClick }) => {
               click: () => onBusinessClick(business)
             }}
           >
+            <Tooltip 
+              permanent 
+              direction="top" 
+              offset={[0, -10]}
+              className="bg-white text-dark font-bold border border-gray-200 rounded-lg px-2.5 py-1 text-xs shadow-md pointer-events-none"
+            >
+              {business.name}
+            </Tooltip>
             <Popup>
               <div className="text-center p-1">
                 <h3 className="font-bold text-dark text-sm">{business.name}</h3>

@@ -49,6 +49,22 @@ const Home = () => {
     setLoading(false);
   }, [isAuthenticated, user, selectedCategoryId, activeSearch]);
 
+  const handleRefresh = async () => {
+    setLoading(true);
+    const bizRes = await businessService.getBusinesses({
+      ...(selectedCategoryId ? { categoryId: selectedCategoryId } : {}),
+      ...(activeSearch ? { searchQuery: activeSearch } : {})
+    });
+
+    if (bizRes.error) {
+      console.error('Error al cargar negocios:', bizRes.error);
+    }
+    const data = bizRes.data || [];
+    const shuffled = [...data].sort(() => Math.random() - 0.5);
+    setBusinesses(shuffled);
+    setLoading(false);
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
@@ -130,7 +146,7 @@ const Home = () => {
                   </button>
                 </div>
                 <button
-                  onClick={fetchData}
+                  onClick={handleRefresh}
                   className="text-primary border border-primary/50 hover:bg-primary/10 px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
                 >
                   Actualizar
@@ -229,18 +245,16 @@ const Home = () => {
               </div>
             ) : businesses.length > 0 ? (
               viewMode === 'list' ? (
-                <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {businesses.map((business) => (
-                    <div key={business.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
-                      <BusinessCard
-                        key={business.id}
-                        business={business}
-                        onClick={handleCardClick}
-                        isSelected={selectedBusiness?.id === business.id}
-                        isFavorite={favorites.includes(business.id)}
-                        onToggleFavorite={handleToggleFavorite}
-                      />
-                    </div>
+                    <BusinessCard
+                      key={business.id}
+                      business={business}
+                      onClick={handleCardClick}
+                      isSelected={selectedBusiness?.id === business.id}
+                      isFavorite={favorites.includes(business.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                    />
                   ))}
                 </div>
               ) : (
