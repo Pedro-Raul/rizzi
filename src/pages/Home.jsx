@@ -111,7 +111,7 @@ const Home = () => {
             <div className="border-t border-primary/20 pt-4 flex justify-between items-center mb-4 flex-wrap gap-3">
               <h2 className="text-2xl font-bold text-dark">Emprendimientos Destacados</h2>
               <div className="flex items-center gap-2">
-                <div className="lg:hidden bg-white rounded-lg p-1 flex border border-gray-200 shadow-sm">
+                <div className="bg-white rounded-lg p-1 flex border border-gray-200 shadow-sm">
                   <button
                     onClick={() => setViewMode('list')}
                     className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium transition-colors ${
@@ -228,33 +228,10 @@ const Home = () => {
                 ))}
               </div>
             ) : businesses.length > 0 ? (
-              <div className="flex flex-col lg:flex-row gap-8 items-stretch">
-                {/* List Column */}
-                <div className="flex-1 space-y-6">
-                  {/* Mobile/Tablet View (Toggled between horizontal carousel list and full-screen Map) */}
-                  <div className="lg:hidden">
-                    {viewMode === 'list' ? (
-                      <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
-                        {businesses.map((business) => (
-                          <div key={business.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
-                            <BusinessCard
-                              business={business}
-                              onClick={handleCardClick}
-                              isSelected={selectedBusiness?.id === business.id}
-                              isFavorite={favorites.includes(business.id)}
-                              onToggleFavorite={handleToggleFavorite}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <BusinessMap businesses={businesses} onBusinessClick={handleCardClick} />
-                    )}
-                  </div>
-
-                  {/* Desktop View: Grid (Always visible on large screens) */}
-                  <div className="hidden lg:grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {businesses.map((business) => (
+              viewMode === 'list' ? (
+                <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
+                  {businesses.map((business) => (
+                    <div key={business.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
                       <BusinessCard
                         key={business.id}
                         business={business}
@@ -263,15 +240,12 @@ const Home = () => {
                         isFavorite={favorites.includes(business.id)}
                         onToggleFavorite={handleToggleFavorite}
                       />
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Desktop View Map: Always visible on large screens */}
-                <div className="hidden lg:block w-[450px] xl:w-[500px] shrink-0 sticky top-6 self-start h-[600px] rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                  <BusinessMap businesses={businesses} onBusinessClick={handleCardClick} />
-                </div>
-              </div>
+              ) : (
+                <BusinessMap businesses={businesses} onBusinessClick={handleCardClick} />
+              )
             ) : (
               <div className="text-center py-12 bg-white/70 rounded-xl border border-dashed border-gray-300">
                 <Store className="mx-auto text-gray-400 mb-4" size={48} />

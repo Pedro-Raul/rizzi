@@ -39,6 +39,8 @@ const BusinessMap = ({ businesses, onBusinessClick }) => {
       <MapContainer 
         center={[4.6097, -74.0817]} 
         zoom={12} 
+        zoomControl={false}
+        attributionControl={false}
         className="w-full h-full"
       >
         <TileLayer
