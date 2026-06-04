@@ -106,5 +106,16 @@ export const orderService = {
       .select();
 
     return { data, error };
+  },
+
+  // Eliminar un pedido
+  async deleteOrder(orderId) {
+    const { data, error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId)
+      .select();
+
+    return { data, error };
   }
 };

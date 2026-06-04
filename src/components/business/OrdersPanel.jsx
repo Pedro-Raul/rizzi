@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { orderService } from '../../services/order.service';
-import { Package, Clock, CheckCircle, XCircle, Inbox } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, Inbox, Trash2 } from 'lucide-react';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -22,6 +23,7 @@ const OrdersPanel = ({ businessId, businesses = null }) => {
   const [updating, setUpdating] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [businessFilter, setBusinessFilter] = useState('all');
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const businessList = Array.isArray(businesses) ? businesses : [];
   const businessIds = businessList.length > 0
@@ -55,20 +57,37 @@ const OrdersPanel = ({ businessId, businesses = null }) => {
     fetchOrders();
   }, [businessIdsKey]);
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    setUpdating(true);
-    const { error } = await orderService.updateOrderStatus(orderId, newStatus);
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return;
 
-    if (!error) {
-      setOrders((currentOrders) =>
-        currentOrders.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
-      );
-    } else {
-      alert('Error al actualizar el pedido: ' + error.message);
+    setUpdating(true);
+    const { type, orderId, newStatus } = confirmAction;
+
+    if (type === 'status_change') {
+      const { error } = await orderService.updateOrderStatus(orderId, newStatus);
+
+      if (!error) {
+        setOrders((currentOrders) =>
+          currentOrders.map((order) =>
+            order.id === orderId ? { ...order, status: newStatus } : order
+          )
+        );
+      } else {
+        alert('Error al actualizar el pedido: ' + error.message);
+      }
+    } else if (type === 'delete') {
+      const { error } = await orderService.deleteOrder(orderId);
+
+      if (!error) {
+        setOrders((currentOrders) =>
+          currentOrders.filter((order) => order.id !== orderId)
+        );
+      } else {
+        alert('Error al eliminar el pedido: ' + error.message);
+      }
     }
 
+    setConfirmAction(null);
     setUpdating(false);
   };
 
@@ -179,7 +198,15 @@ const OrdersPanel = ({ businessId, businesses = null }) => {
             {order.status === 'pending' && (
               <button
                 disabled={updating}
-                onClick={() => handleStatusChange(order.id, 'in_preparation')}
+                onClick={() => setConfirmAction({
+                  type: 'status_change',
+                  orderId: order.id,
+                  newStatus: 'in_preparation',
+                  title: 'Aceptar y Preparar Pedido',
+                  description: `¿Confirmas que deseas comenzar a preparar el pedido #${order.id.slice(0, 8)}? Esta acción no se puede deshacer.`,
+                  confirmLabel: 'Aceptar y Preparar',
+                  variant: 'primary'
+                })}
                 className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
               >
                 <Clock size={16} /> Preparar
@@ -188,7 +215,15 @@ const OrdersPanel = ({ businessId, businesses = null }) => {
             {(order.status === 'pending' || order.status === 'in_preparation') && (
               <button
                 disabled={updating}
-                onClick={() => handleStatusChange(order.id, 'delivered')}
+                onClick={() => setConfirmAction({
+                  type: 'status_change',
+                  orderId: order.id,
+                  newStatus: 'delivered',
+                  title: 'Marcar Pedido como Entregado',
+                  description: `¿Confirmas que el pedido #${order.id.slice(0, 8)} ha sido entregado con éxito al cliente? Esta acción no se puede deshacer.`,
+                  confirmLabel: 'Confirmar Entrega',
+                  variant: 'success'
+                })}
                 className="bg-green-50 text-green-600 hover:bg-green-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
               >
                 <CheckCircle size={16} /> Marcar entregado
@@ -197,15 +232,50 @@ const OrdersPanel = ({ businessId, businesses = null }) => {
             {order.status !== 'delivered' && order.status !== 'cancelled' && (
               <button
                 disabled={updating}
-                onClick={() => handleStatusChange(order.id, 'cancelled')}
+                onClick={() => setConfirmAction({
+                  type: 'status_change',
+                  orderId: order.id,
+                  newStatus: 'cancelled',
+                  title: 'Cancelar Pedido',
+                  description: `¿Estás seguro de que deseas cancelar el pedido #${order.id.slice(0, 8)}? Esta acción es definitiva.`,
+                  confirmLabel: 'Sí, cancelar',
+                  variant: 'danger'
+                })}
                 className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 sm:ml-auto disabled:opacity-50"
               >
                 <XCircle size={16} /> Cancelar
               </button>
             )}
+            {(order.status === 'delivered' || order.status === 'cancelled') && (
+              <button
+                disabled={updating}
+                onClick={() => setConfirmAction({
+                  type: 'delete',
+                  orderId: order.id,
+                  title: 'Eliminar Pedido',
+                  description: `¿Estás seguro de que deseas eliminar permanentemente el pedido #${order.id.slice(0, 8)} de tu historial? Esta acción no se puede deshacer.`,
+                  confirmLabel: 'Eliminar',
+                  variant: 'danger'
+                })}
+                className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 sm:ml-auto disabled:opacity-50"
+              >
+                <Trash2 size={16} /> Eliminar
+              </button>
+            )}
           </div>
         </div>
       ))}
+
+      <ConfirmDialog
+        open={!!confirmAction}
+        title={confirmAction?.title}
+        description={confirmAction?.description}
+        confirmLabel={confirmAction?.confirmLabel}
+        variant={confirmAction?.variant}
+        loading={updating}
+        onConfirm={handleConfirmAction}
+        onCancel={() => setConfirmAction(null)}
+      />
     </div>
   );
 };
