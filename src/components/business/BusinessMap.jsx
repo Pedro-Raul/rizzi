@@ -35,7 +35,7 @@ const BusinessMap = ({ businesses, onBusinessClick }) => {
   const businessesWithLocation = businesses.filter(b => b.latitude && b.longitude);
 
   return (
-    <div className="w-full h-[500px] md:h-full min-h-[500px] rounded-xl overflow-hidden border border-gray-200 shadow-sm relative z-0">
+    <div className="w-full h-[450px] rounded-xl overflow-hidden border border-gray-200 shadow-sm relative z-0">
       <MapContainer 
         center={[4.6097, -74.0817]} 
         zoom={12} 
