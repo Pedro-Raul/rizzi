@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Package, Clock, CheckCircle, Store, MapPin, MessageSquare } from 'lucide-react';
+import { Package, Clock, CheckCircle, Store, MapPin, MessageSquare, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/order.service';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 const statusStyles = {
   pending: {
@@ -32,7 +33,24 @@ const MyOrders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingOrderId, setDeletingOrderId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const userId = user?.id;
+
+  const handleDeleteOrder = async () => {
+    if (!deletingOrderId) return;
+
+    setDeleting(true);
+    const { error } = await orderService.deleteOrder(deletingOrderId);
+
+    if (!error) {
+      setOrders((prev) => prev.filter((o) => o.id !== deletingOrderId));
+      setDeletingOrderId(null);
+    } else {
+      alert('Error al eliminar el pedido: ' + error.message);
+    }
+    setDeleting(false);
+  };
 
   const loadOrders = useCallback(async () => {
     if (!userId) return;
@@ -147,6 +165,19 @@ const MyOrders = () => {
                         ))}
                       </ul>
                     </div>
+
+                    {(order.status === 'delivered' || order.status === 'cancelled') && (
+                      <div className="flex justify-end mt-4 pt-3 border-t border-gray-100">
+                        <button
+                          type="button"
+                          onClick={() => setDeletingOrderId(order.id)}
+                          className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                        >
+                          <Trash2 size={16} />
+                          Eliminar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -163,6 +194,17 @@ const MyOrders = () => {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deletingOrderId}
+        title="Eliminar Pedido"
+        description="¿Estás seguro de que deseas eliminar permanentemente este pedido de tu historial? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDeleteOrder}
+        onCancel={() => setDeletingOrderId(null)}
+      />
     </div>
   );
 };
